@@ -5,6 +5,8 @@ export type UUID = string;
 export type IsoDate = string;
 /** LocalDateTime serializado como "yyyy-MM-ddTHH:mm:ss". */
 export type IsoDateTime = string;
+/** YearMonth serializado como "yyyy-MM". */
+export type IsoYearMonth = string;
 
 // ---------- Enums ----------
 export const PROVEDOR_AUTENTICACAO = ["LOCAL", "GOOGLE", "FACEBOOK"] as const;
@@ -75,6 +77,27 @@ export const TIPO_GARANTIA = [
   "OUTRA",
 ] as const;
 export type TipoGarantia = (typeof TIPO_GARANTIA)[number];
+
+export const STATUS_PAGAMENTO_ALUGUEL = [
+  "PENDENTE",
+  "PAGO",
+  "PAGO_COM_ATRASO",
+  "PAGO_PARCIALMENTE",
+  "EM_ATRASO",
+  "CANCELADO",
+] as const;
+export type StatusPagamentoAluguel = (typeof STATUS_PAGAMENTO_ALUGUEL)[number];
+
+export const FORMA_PAGAMENTO = [
+  "PIX",
+  "TRANSFERENCIA",
+  "BOLETO",
+  "DINHEIRO",
+  "CARTAO",
+  "CHEQUE",
+  "OUTRA",
+] as const;
+export type FormaPagamento = (typeof FORMA_PAGAMENTO)[number];
 
 // ---------- Endereço ----------
 export interface Endereco {
@@ -195,5 +218,46 @@ export interface ContratoRequest {
   periodoReajuste?: number | null;
   tipoGarantia?: TipoGarantia | null;
   valorGarantia?: number | null;
+  observacoes?: string | null;
+}
+
+// ---------- Pagamento de aluguel ----------
+export interface PagamentoAluguelResponse {
+  id: UUID;
+  contratoId: UUID | null;
+  competencia: IsoYearMonth;
+  dataVencimento: IsoDate;
+  valorPrevisto: number;
+  valorPago?: number | null;
+  dataPagamento?: IsoDate | null;
+  /** Status persistido. */
+  status: StatusPagamentoAluguel;
+  /** Status "real" na data de hoje (PENDENTE vencido vira EM_ATRASO). */
+  statusEfetivo: StatusPagamentoAluguel;
+  emAtraso: boolean;
+  /** valorPrevisto - valorPago (positivo => ainda há valor em aberto). */
+  saldo: number;
+  formaPagamento?: FormaPagamento | null;
+  observacoes?: string | null;
+  dataCriacao: IsoDateTime;
+  dataAtualizacao: IsoDateTime;
+}
+
+export interface PagamentoAluguelRequest {
+  contratoId: UUID;
+  competencia: IsoYearMonth;
+  dataVencimento: IsoDate;
+  valorPrevisto: number;
+  valorPago?: number | null;
+  dataPagamento?: IsoDate | null;
+  status?: StatusPagamentoAluguel | null;
+  formaPagamento?: FormaPagamento | null;
+  observacoes?: string | null;
+}
+
+export interface RegistrarPagamentoRequest {
+  valorPago: number;
+  dataPagamento?: IsoDate | null;
+  formaPagamento?: FormaPagamento | null;
   observacoes?: string | null;
 }

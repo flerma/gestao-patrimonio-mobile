@@ -41,6 +41,8 @@ export function useSalvarContrato(id?: UUID) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contratosKeys.all });
       queryClient.invalidateQueries({ queryKey: ["imoveis"] });
+      // criar/atualizar contrato gera/afeta as parcelas de aluguel no backend
+      queryClient.invalidateQueries({ queryKey: ["pagamentos-aluguel"] });
       toast.success(id ? "Contrato atualizado." : "Contrato cadastrado.");
     },
     onError: (error) =>
@@ -54,6 +56,9 @@ export function useExcluirContrato() {
     mutationFn: (id: UUID) => contratosApi.deletar(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: contratosKeys.all });
+      queryClient.invalidateQueries({ queryKey: ["imoveis"] });
+      // excluir contrato remove as parcelas de aluguel vinculadas no backend
+      queryClient.invalidateQueries({ queryKey: ["pagamentos-aluguel"] });
       toast.success("Contrato excluído.");
     },
     onError: (error) =>

@@ -5,11 +5,13 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { useImoveis } from "@/hooks/use-imoveis";
 import { useContratos } from "@/hooks/use-contratos";
+import { usePagamentosAluguel } from "@/hooks/use-pagamentos-aluguel";
 import { useUsuarios } from "@/hooks/use-usuarios";
 import { useSelectedUser } from "@/providers/selected-user";
 import {
   calcularEvolucao,
   calcularResumo,
+  calcularResumoPagamentos,
   filtrarPorUsuario,
   gerarAlertas,
 } from "@/lib/dashboard";
@@ -29,12 +31,14 @@ import { UserSwitcher } from "@/components/UserSwitcher";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RentEvolutionChart } from "@/components/dashboard/RentEvolutionChart";
 import { AlertsList } from "@/components/dashboard/AlertsList";
+import { RentPaymentsSummary } from "@/components/dashboard/RentPaymentsSummary";
 
 export default function DashboardScreen() {
   const router = useRouter();
   const { usuarioId } = useSelectedUser();
   const imoveisQuery = useImoveis();
   const contratosQuery = useContratos();
+  const pagamentosQuery = usePagamentosAluguel();
   const usuariosQuery = useUsuarios();
 
   const loading = imoveisQuery.isLoading || contratosQuery.isLoading;
@@ -46,14 +50,21 @@ export default function DashboardScreen() {
       contratosQuery.data ?? [],
       usuarioId ?? undefined,
     );
+    const contratosPermitidos = usuarioId
+      ? new Set(contratosUsuario.map((c) => c.id))
+      : undefined;
     return {
       imoveisUsuario,
       contratosUsuario,
       resumo: calcularResumo(imoveisUsuario, contratosUsuario),
+      resumoPagamentos: calcularResumoPagamentos(
+        pagamentosQuery.data ?? [],
+        contratosPermitidos,
+      ),
       evolucao: calcularEvolucao(contratosUsuario, 12),
       alertas: gerarAlertas(imoveisUsuario, contratosUsuario),
     };
-  }, [imoveisQuery.data, contratosQuery.data, usuarioId]);
+  }, [imoveisQuery.data, contratosQuery.data, pagamentosQuery.data, usuarioId]);
 
   const nomeUsuario = usuarioId
     ? usuariosQuery.data?.find((u) => u.id === usuarioId)?.nome
@@ -73,10 +84,13 @@ export default function DashboardScreen() {
   }, [dados.contratosUsuario]);
 
   const refreshing =
-    imoveisQuery.isRefetching || contratosQuery.isRefetching;
+    imoveisQuery.isRefetching ||
+    contratosQuery.isRefetching ||
+    pagamentosQuery.isRefetching;
   const onRefresh = () => {
     imoveisQuery.refetch();
     contratosQuery.refetch();
+    pagamentosQuery.refetch();
     usuariosQuery.refetch();
   };
 
@@ -130,8 +144,8 @@ export default function DashboardScreen() {
             />
             <StatCard
               label="Recebido (acum.)"
-              value={formatCurrency(resumo.aluguelRecebidoAcumulado)}
-              hint={`${resumo.qtdContratosAtivos} contrato(s) ativo(s)`}
+              value={formatCurrency(dados.resumoPagamentos.totalRecebido)}
+              hint="Pago, pago com atraso ou parcial"
               icon="wallet"
               accent="primary"
             />
@@ -141,6 +155,15 @@ export default function DashboardScreen() {
             <CardTitle>Evolução dos aluguéis</CardTitle>
             <Txt variant="muted">Previsto por mês e acumulado (12 meses)</Txt>
             <RentEvolutionChart data={dados.evolucao} />
+          </Card>
+
+          <Card>
+            <CardTitle>Pagamentos de aluguel</CardTitle>
+            <RentPaymentsSummary
+              resumo={dados.resumoPagamentos}
+              loading={pagamentosQuery.isLoading && !pagamentosQuery.data}
+              error={Boolean(pagamentosQuery.error) && !pagamentosQuery.data}
+            />
           </Card>
 
           <Card>

@@ -1,4 +1,9 @@
-import type { ContratoResponse, ImovelResponse, UUID } from "@/lib/types";
+import type {
+  ContratoResponse,
+  ImovelResponse,
+  PagamentoAluguelResponse,
+  UUID,
+} from "@/lib/types";
 
 export interface DashboardResumo {
   totalPatrimonio: number;
@@ -18,6 +23,84 @@ export interface PontoEvolucao {
   mes: string; // yyyy-MM
   previsto: number;
   acumulado: number;
+}
+
+export interface ResumoPagamentos {
+  /** Quitados (PAGO ou PAGO_COM_ATRASO). */
+  pagos: number;
+  /** A vencer / parcialmente pagos e ainda no prazo. */
+  pendentes: number;
+  /** Vencidos e não quitados (status efetivo EM_ATRASO). */
+  emAtraso: number;
+  totalPrevisto: number;
+  /** Soma de `valorPago` das cobranças com status PAGO, PAGO_COM_ATRASO ou PAGO_PARCIALMENTE. */
+  totalRecebido: number;
+  /** Saldo em aberto das cobranças em atraso. */
+  totalEmAtraso: number;
+  /** Total de cobranças consideradas (exclui CANCELADO). */
+  quantidade: number;
+}
+
+/**
+ * Consolida os pagamentos de aluguel para o quadro do dashboard.
+ * Usa `statusEfetivo` (a API já converte PENDENTE/PARCIAL vencido em EM_ATRASO).
+ * `contratosPermitidos`, quando informado, restringe aos contratos do usuário
+ * selecionado (os pagamentos só trazem `contratoId`).
+ */
+export function calcularResumoPagamentos(
+  pagamentos: PagamentoAluguelResponse[],
+  contratosPermitidos?: Set<UUID>,
+): ResumoPagamentos {
+  const resumo: ResumoPagamentos = {
+    pagos: 0,
+    pendentes: 0,
+    emAtraso: 0,
+    totalPrevisto: 0,
+    totalRecebido: 0,
+    totalEmAtraso: 0,
+    quantidade: 0,
+  };
+
+  for (const pagamento of pagamentos) {
+    if (
+      contratosPermitidos &&
+      (pagamento.contratoId == null ||
+        !contratosPermitidos.has(pagamento.contratoId))
+    ) {
+      continue;
+    }
+
+    const status = pagamento.statusEfetivo ?? pagamento.status;
+    if (status === "CANCELADO") continue;
+
+    const previsto = Number(pagamento.valorPrevisto ?? 0);
+    const recebido = Number(pagamento.valorPago ?? 0);
+    const saldo = Number(
+      pagamento.saldo ?? Math.max(previsto - recebido, 0),
+    );
+    // "Recebido" conta apenas onde um pagamento foi efetivamente registrado
+    // (status persistido), independente de estar vencido.
+    const foiPago =
+      pagamento.status === "PAGO" ||
+      pagamento.status === "PAGO_COM_ATRASO" ||
+      pagamento.status === "PAGO_PARCIALMENTE";
+
+    resumo.quantidade += 1;
+    resumo.totalPrevisto += previsto;
+    if (foiPago) resumo.totalRecebido += recebido;
+
+    if (status === "PAGO" || status === "PAGO_COM_ATRASO") {
+      resumo.pagos += 1;
+    } else if (status === "EM_ATRASO") {
+      resumo.emAtraso += 1;
+      resumo.totalEmAtraso += Math.max(saldo, 0);
+    } else {
+      // PENDENTE, PAGO_PARCIALMENTE (ainda no prazo)
+      resumo.pendentes += 1;
+    }
+  }
+
+  return resumo;
 }
 
 export type AlertaSeveridade = "info" | "warning" | "danger";
