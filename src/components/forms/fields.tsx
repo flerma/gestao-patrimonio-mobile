@@ -199,15 +199,16 @@ export function DateField<T extends FieldValues>({
                 value={current}
                 mode="date"
                 display={Platform.OS === "ios" ? "inline" : "default"}
-                onChange={(event, date) => {
+                onValueChange={(_event, date) => {
                   setOpen(false);
-                  if (event.type === "set" && date) {
+                  if (date) {
                     const iso = `${date.getFullYear()}-${String(
                       date.getMonth() + 1,
                     ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
                     field.onChange(iso);
                   }
                 }}
+                onDismiss={() => setOpen(false)}
               />
             ) : null}
           </Field>
