@@ -4,7 +4,11 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 import { AppProviders } from "@/providers";
+import { configurarHandlerNotificacoes } from "@/lib/push";
 import { colors } from "@/lib/theme";
+
+// No-op no Expo Go; ativa o handler de notificações num dev build.
+configurarHandlerNotificacoes();
 
 export default function RootLayout() {
   return (
@@ -35,6 +39,10 @@ export default function RootLayout() {
         <Stack.Screen name="usuarios/novo" options={{ title: "Novo usuário" }} />
         <Stack.Screen name="usuarios/[id]" options={{ title: "Usuário" }} />
         <Stack.Screen name="ajustes" options={{ title: "Ajustes" }} />
+        <Stack.Screen
+          name="alugueis-atrasados"
+          options={{ title: "Aluguéis em atraso" }}
+        />
       </Stack>
     </AppProviders>
   );

@@ -4,6 +4,7 @@ import type {
   PagamentoAluguelResponse,
   UUID,
 } from "@/lib/types";
+import { formatCurrency } from "@/lib/format";
 
 export interface DashboardResumo {
   totalPatrimonio: number;
@@ -103,6 +104,65 @@ export function calcularResumoPagamentos(
   return resumo;
 }
 
+export interface AluguelEmAtraso {
+  pagamento: PagamentoAluguelResponse;
+  contrato: ContratoResponse | null;
+  imovel: ImovelResponse | null;
+  /** Dias corridos entre o vencimento e `hoje`. */
+  diasEmAtraso: number;
+}
+
+/**
+ * Lista as cobranças de aluguel com status efetivo EM_ATRASO, já unidas ao
+ * contrato e ao imóvel correspondentes, ordenadas do vencimento mais antigo
+ * para o mais recente. `contratosPermitidos`, quando informado, restringe aos
+ * contratos do usuário selecionado (os pagamentos só trazem `contratoId`).
+ */
+export function listarAlugueisEmAtraso(
+  pagamentos: PagamentoAluguelResponse[],
+  contratos: ContratoResponse[],
+  contratosPermitidos?: Set<UUID>,
+  hoje = new Date(),
+): AluguelEmAtraso[] {
+  const contratoPorId = new Map(contratos.map((c) => [c.id, c]));
+  const linhas: AluguelEmAtraso[] = [];
+
+  for (const pagamento of pagamentos) {
+    if (
+      contratosPermitidos &&
+      (pagamento.contratoId == null ||
+        !contratosPermitidos.has(pagamento.contratoId))
+    ) {
+      continue;
+    }
+
+    const status = pagamento.statusEfetivo ?? pagamento.status;
+    if (status !== "EM_ATRASO") continue;
+
+    const contrato = pagamento.contratoId
+      ? contratoPorId.get(pagamento.contratoId) ?? null
+      : null;
+    const vencimento = parseDate(pagamento.dataVencimento);
+    const diasEmAtraso = vencimento
+      ? Math.max(
+          0,
+          Math.floor((hoje.getTime() - vencimento.getTime()) / 86_400_000),
+        )
+      : 0;
+
+    linhas.push({
+      pagamento,
+      contrato,
+      imovel: contrato?.imovel ?? null,
+      diasEmAtraso,
+    });
+  }
+
+  return linhas.sort((a, b) =>
+    a.pagamento.dataVencimento.localeCompare(b.pagamento.dataVencimento),
+  );
+}
+
 export type AlertaSeveridade = "info" | "warning" | "danger";
 
 export interface Alerta {
@@ -110,6 +170,8 @@ export interface Alerta {
   severidade: AlertaSeveridade;
   titulo: string;
   descricao: string;
+  /** Rota interna para onde o alerta leva quando clicado (opcional). */
+  href?: string;
 }
 
 function monthKey(date: Date): string {
@@ -228,6 +290,7 @@ export function calcularEvolucao(
 export function gerarAlertas(
   imoveis: ImovelResponse[],
   contratos: ContratoResponse[],
+  pagamentos: PagamentoAluguelResponse[] = [],
   hoje = new Date(),
 ): Alerta[] {
   const alertas: Alerta[] = [];
@@ -314,6 +377,26 @@ export function gerarAlertas(
         descricao: "Marcado como alugado, mas não há contrato ativo vinculado.",
       });
     }
+  }
+
+  const alugueisEmAtraso = listarAlugueisEmAtraso(
+    pagamentos,
+    contratos,
+    new Set(contratos.map((c) => c.id)),
+    hoje,
+  );
+  if (alugueisEmAtraso.length > 0) {
+    const totalEmAberto = alugueisEmAtraso.reduce(
+      (acc, linha) => acc + Math.max(Number(linha.pagamento.saldo ?? 0), 0),
+      0,
+    );
+    alertas.push({
+      id: "alugueis-em-atraso",
+      severidade: "danger",
+      titulo: `${alugueisEmAtraso.length} aluguel(is) em atraso`,
+      descricao: `${formatCurrency(totalEmAberto)} em aberto. Veja a lista de aluguéis atrasados.`,
+      href: "/alugueis-atrasados",
+    });
   }
 
   const ordem: Record<AlertaSeveridade, number> = {

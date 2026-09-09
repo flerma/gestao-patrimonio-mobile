@@ -5,6 +5,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { loadApiBaseUrl } from "@/lib/config";
 import { QueryProvider } from "./query";
 import { SelectedUserProvider } from "./selected-user";
+import { PushRegistrar } from "./push";
 import { ToastProvider } from "./toast";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
@@ -17,6 +18,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       <SafeAreaProvider>
         <QueryProvider>
           <SelectedUserProvider>
+            <PushRegistrar />
             <ToastProvider>{children}</ToastProvider>
           </SelectedUserProvider>
         </QueryProvider>

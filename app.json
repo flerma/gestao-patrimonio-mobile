@@ -28,7 +28,14 @@
     "plugins": [
       "expo-router",
       "@react-native-community/datetimepicker",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#3B82F6",
+          "defaultChannel": "alertas"
+        }
+      ]
     ],
     "extra": {
       "apiBaseUrl": "http://10.0.2.2:8080"

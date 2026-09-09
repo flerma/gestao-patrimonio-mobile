@@ -62,7 +62,11 @@ export default function DashboardScreen() {
         contratosPermitidos,
       ),
       evolucao: calcularEvolucao(contratosUsuario, 12),
-      alertas: gerarAlertas(imoveisUsuario, contratosUsuario),
+      alertas: gerarAlertas(
+        imoveisUsuario,
+        contratosUsuario,
+        pagamentosQuery.data ?? [],
+      ),
     };
   }, [imoveisQuery.data, contratosQuery.data, pagamentosQuery.data, usuarioId]);
 

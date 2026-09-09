@@ -1,29 +1,30 @@
+// Paleta "Azul sereno": fundo off-white, superfícies brancas, azul calmo.
 export const colors = {
-  background: "#f1f5f9",
+  background: "#F7F9FC",
   surface: "#ffffff",
-  surfaceMuted: "#f8fafc",
-  border: "#e2e8f0",
-  text: "#0f172a",
-  textMuted: "#64748b",
-  textFaint: "#94a3b8",
+  surfaceMuted: "#F1F5FB",
+  border: "#E9EEF5",
+  text: "#1F2733",
+  textMuted: "#6A7686",
+  textFaint: "#9AA6B4",
 
-  primary: "#2563eb",
-  primarySoft: "#dbeafe",
-  primaryText: "#1d4ed8",
+  primary: "#3B82F6",
+  primarySoft: "#E8F1FE",
+  primaryText: "#1D4ED8",
 
-  success: "#16a34a",
-  successSoft: "#dcfce7",
-  warning: "#d97706",
-  warningSoft: "#ffedd5",
-  danger: "#dc2626",
-  dangerSoft: "#fee2e2",
+  success: "#1FA463",
+  successSoft: "#E4F5EC",
+  warning: "#E0A100",
+  warningSoft: "#FBF1DA",
+  danger: "#E5484D",
+  dangerSoft: "#FCE9EA",
 
-  sidebar: "#0f172a",
-  sidebarText: "#e2e8f0",
+  sidebar: "#ffffff",
+  sidebarText: "#1F2733",
 
-  chart1: "#2563eb",
-  chart2: "#16a34a",
-  chart3: "#d97706",
+  chart1: "#3B82F6",
+  chart2: "#1FA463",
+  chart3: "#E0A100",
 };
 
 export const spacing = {
@@ -36,9 +37,9 @@ export const spacing = {
 };
 
 export const radius = {
-  sm: 8,
-  md: 12,
-  lg: 16,
+  sm: 10,
+  md: 14,
+  lg: 18,
   pill: 999,
 };
 
@@ -63,5 +64,5 @@ export const badgeColors: Record<
   success: { bg: colors.successSoft, fg: colors.success },
   warning: { bg: colors.warningSoft, fg: colors.warning },
   danger: { bg: colors.dangerSoft, fg: colors.danger },
-  muted: { bg: "#e2e8f0", fg: "#475569" },
+  muted: { bg: "#EAEEF4", fg: "#5A6675" },
 };
