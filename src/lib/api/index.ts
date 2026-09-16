@@ -1,4 +1,12 @@
 export { usuariosApi } from "./usuarios";
+export { authApi } from "./auth";
+export type {
+  LoginRequest,
+  LoginResponse,
+  RefreshResponse,
+  RegistrarRequest,
+  UsuarioAutenticado,
+} from "./auth";
 export { imoveisApi } from "./imoveis";
 export { inquilinosApi } from "./inquilinos";
 export { contratosApi } from "./contratos";

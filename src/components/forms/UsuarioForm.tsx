@@ -25,6 +25,7 @@ import { SelectField, TextField } from "./fields";
 const schema = z.object({
   nome: z.string().trim().min(1, "Informe o nome"),
   email: z.string().trim().email("E-mail inválido"),
+  telefone: z.string().trim().optional(),
   provedorAutenticacao: z.enum(PROVEDOR_AUTENTICACAO),
   idUsuarioProvedor: z.string().optional(),
   status: z.enum(STATUS_USUARIO),
@@ -40,6 +41,7 @@ export function UsuarioForm({ usuario }: { usuario?: UsuarioResponse }) {
     defaultValues: {
       nome: usuario?.nome ?? "",
       email: usuario?.email ?? "",
+      telefone: usuario?.telefone ?? "",
       provedorAutenticacao: usuario?.provedorAutenticacao ?? "LOCAL",
       idUsuarioProvedor: usuario?.idUsuarioProvedor ?? "",
       status: usuario?.status ?? "ATIVO",
@@ -50,6 +52,7 @@ export function UsuarioForm({ usuario }: { usuario?: UsuarioResponse }) {
     const payload: UsuarioRequest = {
       nome: values.nome,
       email: values.email,
+      telefone: values.telefone || undefined,
       provedorAutenticacao: values.provedorAutenticacao,
       idUsuarioProvedor: values.idUsuarioProvedor || undefined,
       status: values.status,
@@ -67,6 +70,12 @@ export function UsuarioForm({ usuario }: { usuario?: UsuarioResponse }) {
           label="E-mail"
           keyboardType="email-address"
           autoCapitalize="none"
+        />
+        <TextField
+          control={control}
+          name="telefone"
+          label="Telefone (opcional)"
+          keyboardType="phone-pad"
         />
         <SelectField
           control={control}

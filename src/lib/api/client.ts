@@ -1,4 +1,11 @@
 import { getApiBaseUrl } from "@/lib/config";
+import {
+  clearSession,
+  emitSessionExpired,
+  getAccessToken,
+  getRefreshToken,
+  updateAccessToken,
+} from "@/lib/auth/token-storage";
 
 export class ApiError extends Error {
   status: number;
@@ -17,6 +24,12 @@ interface RequestOptions extends Omit<RequestInit, "body"> {
   query?: Record<string, string | number | boolean | null | undefined>;
 }
 
+const AUTH_PATH_PREFIX = "/api/auth/";
+
+function isAuthPath(path: string): boolean {
+  return path.startsWith(AUTH_PATH_PREFIX);
+}
+
 function buildUrl(path: string, query?: RequestOptions["query"]): string {
   const base = getApiBaseUrl();
   let url = path.startsWith("http") ? path : `${base}${path}`;
@@ -32,29 +45,73 @@ function buildUrl(path: string, query?: RequestOptions["query"]): string {
   return url;
 }
 
-export async function apiFetch<T>(
+async function rawFetch(
   path: string,
-  options: RequestOptions = {},
-): Promise<T> {
+  options: RequestOptions,
+): Promise<Response> {
   const { body, query, headers, ...rest } = options;
 
-  let response: Response;
-  try {
-    response = await fetch(buildUrl(path, query), {
-      ...rest,
-      headers: {
-        Accept: "application/json",
-        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
-        ...headers,
-      },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
-  } catch (cause) {
-    throw new Error(
-      "Falha de conexão com a API. Confira o endereço do servidor em Ajustes.",
-    );
+  const authHeaders: Record<string, string> = {};
+  if (!isAuthPath(path)) {
+    const token = getAccessToken();
+    if (token) authHeaders.Authorization = `Bearer ${token}`;
   }
 
+  return fetch(buildUrl(path, query), {
+    ...rest,
+    headers: {
+      Accept: "application/json",
+      ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      ...authHeaders,
+      ...headers,
+    },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  });
+}
+
+// Evita disparar vários refreshes em paralelo quando várias chamadas
+// tomam 401 ao mesmo tempo — todas aguardam a mesma tentativa.
+let refreshEmAndamento: Promise<boolean> | null = null;
+
+async function tentarRefreshSilencioso(): Promise<boolean> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return false;
+
+  if (!refreshEmAndamento) {
+    refreshEmAndamento = (async () => {
+      try {
+        const response = await fetch(buildUrl("/api/auth/refresh"), {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+        if (!response.ok) return false;
+
+        const text = await response.text();
+        const parsed = text ? safeJsonParse(text) : null;
+        const accessToken =
+          parsed && typeof parsed === "object"
+            ? (parsed as { accessToken?: unknown }).accessToken
+            : undefined;
+        if (typeof accessToken !== "string" || !accessToken) return false;
+
+        await updateAccessToken(accessToken);
+        return true;
+      } catch {
+        return false;
+      }
+    })().finally(() => {
+      refreshEmAndamento = null;
+    });
+  }
+
+  return refreshEmAndamento;
+}
+
+async function toResult<T>(response: Response, path: string): Promise<T> {
   const text = await response.text();
   const parsed = text ? safeJsonParse(text) : null;
 
@@ -77,6 +134,38 @@ export async function apiFetch<T>(
   }
 
   return parsed as T;
+}
+
+export async function apiFetch<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
+  let response: Response;
+  try {
+    response = await rawFetch(path, options);
+  } catch (cause) {
+    throw new Error(
+      "Falha de conexão com a API. Confira o endereço do servidor em Ajustes.",
+    );
+  }
+
+  if (response.status === 401 && !isAuthPath(path)) {
+    const renovou = await tentarRefreshSilencioso();
+    if (renovou) {
+      try {
+        response = await rawFetch(path, options);
+      } catch (cause) {
+        throw new Error(
+          "Falha de conexão com a API. Confira o endereço do servidor em Ajustes.",
+        );
+      }
+    } else {
+      await clearSession();
+      emitSessionExpired();
+    }
+  }
+
+  return toResult<T>(response, path);
 }
 
 function safeJsonParse(text: string): unknown {

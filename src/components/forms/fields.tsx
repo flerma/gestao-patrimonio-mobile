@@ -62,10 +62,12 @@ export function TextField<T extends FieldValues>({
   keyboardType,
   autoCapitalize = "sentences",
   numeric,
+  secureTextEntry,
 }: BaseProps<T> & {
   keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
   autoCapitalize?: "none" | "sentences" | "words";
   numeric?: boolean;
+  secureTextEntry?: boolean;
 }) {
   return (
     <Controller
@@ -89,6 +91,7 @@ export function TextField<T extends FieldValues>({
             placeholderTextColor={colors.textFaint}
             keyboardType={numeric ? "numeric" : keyboardType}
             autoCapitalize={autoCapitalize}
+            secureTextEntry={secureTextEntry}
           />
         </Field>
       )}

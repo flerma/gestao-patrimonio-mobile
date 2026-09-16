@@ -35,7 +35,8 @@
           "color": "#3B82F6",
           "defaultChannel": "alertas"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "apiBaseUrl": "http://10.0.2.2:8080"

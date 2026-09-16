@@ -116,6 +116,7 @@ export interface UsuarioResponse {
   id: UUID;
   nome: string;
   email: string;
+  telefone?: string | null;
   provedorAutenticacao: ProvedorAutenticacao;
   idUsuarioProvedor?: string | null;
   status: StatusUsuario;
@@ -126,6 +127,7 @@ export interface UsuarioResponse {
 export interface UsuarioRequest {
   nome: string;
   email: string;
+  telefone?: string | null;
   provedorAutenticacao: ProvedorAutenticacao;
   idUsuarioProvedor?: string | null;
   status?: StatusUsuario | null;

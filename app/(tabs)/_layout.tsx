@@ -1,8 +1,37 @@
 import * as React from "react";
+import { Pressable, View } from "react-native";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
-import { colors } from "@/lib/theme";
+import { colors, spacing } from "@/lib/theme";
+import { useAuth } from "@/providers/auth";
+import { Txt } from "@/components/ui/Txt";
+
+function HeaderUsuario() {
+  const { usuario, logout } = useAuth();
+  const primeiroNome = usuario?.nome?.trim().split(/\s+/)[0] ?? "";
+
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing.sm,
+        paddingRight: spacing.md,
+      }}
+    >
+      {primeiroNome ? <Txt variant="muted">{primeiroNome}</Txt> : null}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Sair"
+        hitSlop={8}
+        onPress={() => logout()}
+      >
+        <Ionicons name="log-out-outline" size={20} color={colors.textMuted} />
+      </Pressable>
+    </View>
+  );
+}
 
 export default function TabsLayout() {
   return (
@@ -15,6 +44,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
         tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+        headerRight: () => <HeaderUsuario />,
       }}
     >
       <Tabs.Screen

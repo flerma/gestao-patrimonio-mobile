@@ -4,6 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { loadApiBaseUrl } from "@/lib/config";
 import { QueryProvider } from "./query";
+import { AuthProvider } from "./auth";
 import { SelectedUserProvider } from "./selected-user";
 import { PushRegistrar } from "./push";
 import { ToastProvider } from "./toast";
@@ -17,10 +18,12 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <QueryProvider>
-          <SelectedUserProvider>
-            <PushRegistrar />
-            <ToastProvider>{children}</ToastProvider>
-          </SelectedUserProvider>
+          <AuthProvider>
+            <SelectedUserProvider>
+              <PushRegistrar />
+              <ToastProvider>{children}</ToastProvider>
+            </SelectedUserProvider>
+          </AuthProvider>
         </QueryProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
