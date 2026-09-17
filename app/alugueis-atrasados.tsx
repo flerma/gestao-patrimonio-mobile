@@ -5,7 +5,7 @@ import { Stack, useRouter } from "expo-router";
 import { useImoveis } from "@/hooks/use-imoveis";
 import { useContratos } from "@/hooks/use-contratos";
 import { usePagamentosAluguel } from "@/hooks/use-pagamentos-aluguel";
-import { useSelectedUser } from "@/providers/selected-user";
+import { useAuth } from "@/providers/auth";
 import { filtrarPorUsuario, listarAlugueisEmAtraso } from "@/lib/dashboard";
 import { formatCurrency, formatDate, formatMonthLabel } from "@/lib/format";
 import { colors, spacing } from "@/lib/theme";
@@ -21,7 +21,8 @@ import { EntityRow } from "@/components/EntityRow";
 
 export default function AlugueisAtrasadosScreen() {
   const router = useRouter();
-  const { usuarioId } = useSelectedUser();
+  const { usuario } = useAuth();
+  const usuarioId = usuario?.id ?? null;
   const imoveisQuery = useImoveis();
   const contratosQuery = useContratos();
   const pagamentosQuery = usePagamentosAluguel();

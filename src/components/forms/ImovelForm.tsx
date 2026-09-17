@@ -15,14 +15,12 @@ import {
 import { enumOptions, statusImovelLabels, tipoImovelLabels } from "@/lib/labels";
 import { spacing } from "@/lib/theme";
 import { useSalvarImovel } from "@/hooks/use-imoveis";
-import { useUsuarios } from "@/hooks/use-usuarios";
 import { Button } from "@/components/ui/Button";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { SelectField, TextField } from "./fields";
 import { CepField } from "./CepField";
 
 const schema = z.object({
-  usuarioId: z.string().min(1, "Selecione o proprietário"),
   nome: z.string().trim().min(1, "Informe o nome do imóvel"),
   tipo: z.enum(TIPO_IMOVEL),
   status: z.enum(STATUS_IMOVEL),
@@ -47,13 +45,11 @@ type FormValues = z.infer<typeof schema>;
 
 export function ImovelForm({ imovel }: { imovel?: ImovelResponse }) {
   const router = useRouter();
-  const { data: usuarios } = useUsuarios();
   const salvar = useSalvarImovel(imovel?.id);
 
   const { control, handleSubmit, setValue, setFocus } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      usuarioId: imovel?.usuario?.id ?? "",
       nome: imovel?.nome ?? "",
       tipo: imovel?.tipo ?? "APARTAMENTO",
       status: imovel?.status ?? "DISPONIVEL",
@@ -94,16 +90,6 @@ export function ImovelForm({ imovel }: { imovel?: ImovelResponse }) {
   return (
     <View style={{ gap: spacing.lg }}>
       <Card>
-        <SelectField
-          control={control}
-          name="usuarioId"
-          label="Proprietário"
-          placeholder="Selecione o usuário"
-          options={(usuarios ?? []).map((u) => ({
-            value: u.id,
-            label: u.nome,
-          }))}
-        />
         <TextField
           control={control}
           name="nome"

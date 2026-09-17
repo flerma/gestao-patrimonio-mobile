@@ -76,8 +76,8 @@ app/                       # rotas (Expo Router)
 src/
   lib/       types, dashboard, vinculos, format, labels, theme, config, toast, api/
   hooks/     use-{usuarios,imoveis,inquilinos,contratos}.ts (TanStack Query)
-  providers/ query, selected-user, toast
-  components/ ui/, forms/, dashboard/, EntityRow, UserSwitcher, Fab, ConfirmDelete
+  providers/ query, auth, push, toast
+  components/ ui/, forms/, dashboard/, EntityRow, Fab, ConfirmDelete
 ```
 
 `src/lib/{types,dashboard,vinculos}.ts` são compartilhados 1:1 com o projeto web.

@@ -12,7 +12,7 @@ import {
 import { notificacoesApi } from "@/lib/api/notificacoes";
 import { isExpoGo, registrarParaPush, statusPermissao } from "@/lib/push";
 import { queryClient } from "@/providers/query";
-import { useSelectedUser } from "@/providers/selected-user";
+import { useAuth } from "@/providers/auth";
 import { toast } from "@/lib/toast";
 import { colors, radius, spacing } from "@/lib/theme";
 import { Screen } from "@/components/ui/Screen";
@@ -40,7 +40,8 @@ const MOTIVO_MSG: Record<string, string> = {
 
 export default function AjustesScreen() {
   const router = useRouter();
-  const { usuarioId } = useSelectedUser();
+  const { usuario } = useAuth();
+  const usuarioId = usuario?.id ?? null;
   const [url, setUrl] = React.useState(getApiBaseUrl());
   const [current, setCurrent] = React.useState(getApiBaseUrl());
 

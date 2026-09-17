@@ -148,7 +148,6 @@ export interface ImovelResponse {
 }
 
 export interface ImovelRequest {
-  usuarioId: UUID;
   nome: string;
   tipo: TipoImovel;
   status: StatusImovel;

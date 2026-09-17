@@ -3,19 +3,20 @@ import { Platform } from "react-native";
 
 import { notificacoesApi } from "@/lib/api/notificacoes";
 import { isExpoGo, registrarParaPush, statusPermissao } from "@/lib/push";
-import { useSelectedUser } from "./selected-user";
+import { useAuth } from "./auth";
 
 /**
  * Registra o token de push no backend quando a permissão JÁ foi concedida
- * (a concessão acontece na tela de Ajustes). Reexecuta ao trocar de
- * proprietário. Inerte no Expo Go.
+ * (a concessão acontece na tela de Ajustes). Reexecuta ao trocar de usuário
+ * logado. Inerte no Expo Go.
  */
 export function PushRegistrar() {
-  const { usuarioId, hydrated } = useSelectedUser();
+  const { usuario, carregando } = useAuth();
+  const usuarioId = usuario?.id ?? null;
   const ultimoRef = React.useRef<string | null>(null);
 
   React.useEffect(() => {
-    if (!hydrated || isExpoGo) return;
+    if (carregando || isExpoGo) return;
     let cancelado = false;
 
     (async () => {
@@ -30,7 +31,7 @@ export function PushRegistrar() {
 
         await notificacoesApi.registrarDispositivo({
           expoPushToken: registro.token,
-          usuarioId: usuarioId ?? null,
+          usuarioId,
           plataforma: Platform.OS,
         });
         ultimoRef.current = chave;
@@ -42,7 +43,7 @@ export function PushRegistrar() {
     return () => {
       cancelado = true;
     };
-  }, [hydrated, usuarioId]);
+  }, [carregando, usuarioId]);
 
   return null;
 }

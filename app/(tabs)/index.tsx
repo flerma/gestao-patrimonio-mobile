@@ -6,8 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useImoveis } from "@/hooks/use-imoveis";
 import { useContratos } from "@/hooks/use-contratos";
 import { usePagamentosAluguel } from "@/hooks/use-pagamentos-aluguel";
-import { useUsuarios } from "@/hooks/use-usuarios";
-import { useSelectedUser } from "@/providers/selected-user";
+import { useAuth } from "@/providers/auth";
 import {
   calcularEvolucao,
   calcularResumo,
@@ -27,7 +26,6 @@ import { Card, CardTitle } from "@/components/ui/Card";
 import { Txt } from "@/components/ui/Txt";
 import { Badge } from "@/components/ui/Badge";
 import { ErrorState, LoadingState } from "@/components/ui/states";
-import { UserSwitcher } from "@/components/UserSwitcher";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RentEvolutionChart } from "@/components/dashboard/RentEvolutionChart";
 import { AlertsList } from "@/components/dashboard/AlertsList";
@@ -35,11 +33,11 @@ import { RentPaymentsSummary } from "@/components/dashboard/RentPaymentsSummary"
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { usuarioId } = useSelectedUser();
+  const { usuario } = useAuth();
+  const usuarioId = usuario?.id ?? null;
   const imoveisQuery = useImoveis();
   const contratosQuery = useContratos();
   const pagamentosQuery = usePagamentosAluguel();
-  const usuariosQuery = useUsuarios();
 
   const loading = imoveisQuery.isLoading || contratosQuery.isLoading;
   const error = imoveisQuery.error ?? contratosQuery.error;
@@ -70,9 +68,7 @@ export default function DashboardScreen() {
     };
   }, [imoveisQuery.data, contratosQuery.data, pagamentosQuery.data, usuarioId]);
 
-  const nomeUsuario = usuarioId
-    ? usuariosQuery.data?.find((u) => u.id === usuarioId)?.nome
-    : null;
+  const nomeUsuario = usuario?.nome ?? null;
 
   const aluguelPorImovel = React.useMemo(() => {
     const map = new Map<string, number>();
@@ -95,7 +91,6 @@ export default function DashboardScreen() {
     imoveisQuery.refetch();
     contratosQuery.refetch();
     pagamentosQuery.refetch();
-    usuariosQuery.refetch();
   };
 
   const { resumo } = dados;
@@ -103,7 +98,9 @@ export default function DashboardScreen() {
   return (
     <Screen refreshing={refreshing} onRefresh={onRefresh}>
       <View style={styles.topRow}>
-        <UserSwitcher />
+        <Txt variant="subtitle" numberOfLines={1} style={styles.flex}>
+          Olá, {nomeUsuario ?? "…"}
+        </Txt>
         <Pressable
           style={styles.gear}
           onPress={() => router.push("/ajustes")}
