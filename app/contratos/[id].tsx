@@ -3,9 +3,14 @@ import { View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { useContrato } from "@/hooks/use-contratos";
-import { spacing } from "@/lib/theme";
+import { usePagamentosAluguel } from "@/hooks/use-pagamentos-aluguel";
+import { calcularResumoPagamentos } from "@/lib/dashboard";
+import { formatCurrency } from "@/lib/format";
+import { colors, spacing } from "@/lib/theme";
 import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Txt } from "@/components/ui/Txt";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import { ContratoForm } from "@/components/forms/ContratoForm";
 
@@ -13,6 +18,12 @@ export default function ContratoDetalheScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { data, isLoading, error, refetch } = useContrato(id);
+  const pagamentosQuery = usePagamentosAluguel(id);
+
+  const resumo = React.useMemo(
+    () => calcularResumoPagamentos(pagamentosQuery.data ?? []),
+    [pagamentosQuery.data],
+  );
 
   return (
     <Screen>
@@ -59,6 +70,28 @@ export default function ContratoDetalheScreen() {
               }
             />
           </View>
+
+          <Card style={{ marginBottom: spacing.lg }}>
+            <View style={{ flexDirection: "row", gap: spacing.md }}>
+              <View style={{ flex: 1 }}>
+                <Txt variant="muted">Atrasados</Txt>
+                <Txt variant="value">{resumo.emAtraso}</Txt>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Txt variant="muted">Em aberto</Txt>
+                <Txt variant="value" style={{ color: colors.danger }}>
+                  {formatCurrency(resumo.totalEmAtraso)}
+                </Txt>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Txt variant="muted">Recebidos</Txt>
+                <Txt variant="value" style={{ color: colors.success }}>
+                  {formatCurrency(resumo.totalRecebido)}
+                </Txt>
+              </View>
+            </View>
+          </Card>
+
           <ContratoForm contrato={data} />
         </>
       )}
