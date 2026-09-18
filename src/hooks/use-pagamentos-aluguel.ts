@@ -54,14 +54,14 @@ export function useSalvarPagamentoAluguel(id?: UUID) {
   });
 }
 
-export function useRegistrarPagamentoAluguel(id: UUID) {
+export function useRegistrarPagamentoAluguel() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: RegistrarPagamentoRequest) =>
+    mutationFn: ({ id, body }: { id: UUID; body: RegistrarPagamentoRequest }) =>
       pagamentosAluguelApi.registrarPagamento(id, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: pagamentosAluguelKeys.all });
-      toast.success("Pagamento registrado.");
+      toast.success("Aluguel marcado como pago.");
     },
     onError: (error) =>
       toast.error(errorMessage(error, "Não foi possível registrar o pagamento.")),

@@ -257,8 +257,7 @@ export interface PagamentoAluguelRequest {
 }
 
 export interface RegistrarPagamentoRequest {
-  valorPago: number;
-  dataPagamento?: IsoDate | null;
-  formaPagamento?: FormaPagamento | null;
+  dataPagamento: IsoDate;
+  formaPagamento: FormaPagamento;
   observacoes?: string | null;
 }

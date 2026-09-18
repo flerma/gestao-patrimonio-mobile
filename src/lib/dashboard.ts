@@ -163,6 +163,41 @@ export function listarAlugueisEmAtraso(
   );
 }
 
+/**
+ * Lista todos os pagamentos de um contrato específico (pagos, pendentes e em
+ * atraso), com `diasEmAtraso` calculado apenas para os EM_ATRASO (0 para os
+ * demais). Ordenados do vencimento mais antigo para o mais recente.
+ */
+export function listarPagamentosDoContrato(
+  pagamentos: PagamentoAluguelResponse[],
+  contrato: ContratoResponse,
+  hoje = new Date(),
+): AluguelEmAtraso[] {
+  const linhas: AluguelEmAtraso[] = pagamentos
+    .filter((p) => p.contratoId === contrato.id)
+    .map((pagamento) => {
+      const status = pagamento.statusEfetivo ?? pagamento.status;
+      const vencimento = parseDate(pagamento.dataVencimento);
+      const diasEmAtraso =
+        status === "EM_ATRASO" && vencimento
+          ? Math.max(
+              0,
+              Math.floor((hoje.getTime() - vencimento.getTime()) / 86_400_000),
+            )
+          : 0;
+      return {
+        pagamento,
+        contrato,
+        imovel: contrato.imovel ?? null,
+        diasEmAtraso,
+      };
+    });
+
+  return linhas.sort((a, b) =>
+    a.pagamento.dataVencimento.localeCompare(b.pagamento.dataVencimento),
+  );
+}
+
 export type AlertaSeveridade = "info" | "warning" | "danger";
 
 export interface Alerta {

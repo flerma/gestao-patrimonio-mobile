@@ -1,5 +1,5 @@
 import * as React from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 
 import { useImoveis } from "@/hooks/use-imoveis";
@@ -9,15 +9,17 @@ import { useAuth } from "@/providers/auth";
 import { filtrarPorUsuario, listarAlugueisEmAtraso } from "@/lib/dashboard";
 import { formatCurrency, formatDate, formatMonthLabel } from "@/lib/format";
 import { colors, spacing } from "@/lib/theme";
+import type { UUID } from "@/lib/types";
 import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { Txt } from "@/components/ui/Txt";
 import {
   EmptyState,
   ErrorState,
   LoadingState,
 } from "@/components/ui/states";
-import { EntityRow } from "@/components/EntityRow";
+import { RegistrarPagamentoControls } from "@/components/dashboard/RegistrarPagamentoControls";
 
 export default function AlugueisAtrasadosScreen() {
   const router = useRouter();
@@ -56,7 +58,15 @@ export default function AlugueisAtrasadosScreen() {
     );
   }, [imoveisQuery.data, contratosQuery.data, pagamentosQuery.data, usuarioId]);
 
-  const totalEmAberto = linhas.reduce(
+  // Some da lista assim que marcado como pago, sem esperar o refetch (que
+  // de qualquer forma o excluiria, já que deixa de estar em atraso).
+  const [idsPagos, setIdsPagos] = React.useState<Set<UUID>>(new Set());
+  const linhasExibidas = React.useMemo(
+    () => linhas.filter((l) => !idsPagos.has(l.pagamento.id)),
+    [linhas, idsPagos],
+  );
+
+  const totalEmAberto = linhasExibidas.reduce(
     (acc, l) => acc + Math.max(Number(l.pagamento.saldo ?? 0), 0),
     0,
   );
@@ -69,7 +79,7 @@ export default function AlugueisAtrasadosScreen() {
         <LoadingState label="Carregando cobranças…" />
       ) : error && !contratosQuery.data ? (
         <ErrorState error={error} onRetry={onRefresh} />
-      ) : linhas.length === 0 ? (
+      ) : linhasExibidas.length === 0 ? (
         <EmptyState
           title="Nenhum aluguel em atraso"
           description="Todas as cobranças de aluguel estão em dia para este proprietário."
@@ -80,7 +90,7 @@ export default function AlugueisAtrasadosScreen() {
             <View style={{ flexDirection: "row", gap: spacing.xl }}>
               <View style={{ flex: 1 }}>
                 <Txt variant="muted">Cobranças em atraso</Txt>
-                <Txt variant="value">{linhas.length}</Txt>
+                <Txt variant="value">{linhasExibidas.length}</Txt>
               </View>
               <View style={{ flex: 1 }}>
                 <Txt variant="muted">Total em aberto</Txt>
@@ -91,27 +101,54 @@ export default function AlugueisAtrasadosScreen() {
             </View>
           </Card>
 
-          {linhas.map(({ pagamento, contrato, imovel, diasEmAtraso }) => (
-            <EntityRow
-              key={pagamento.id}
-              title={imovel?.nome ?? "Imóvel não encontrado"}
-              lines={[
-                contrato?.inquilino?.nome
-                  ? `Inquilino: ${contrato.inquilino.nome}`
-                  : "Inquilino não informado",
-                `Competência ${formatMonthLabel(pagamento.competencia)} · venc. ${formatDate(pagamento.dataVencimento)}`,
-                `Previsto ${formatCurrency(pagamento.valorPrevisto)} · recebido ${formatCurrency(pagamento.valorPago)}`,
-              ]}
-              badge={{
-                label: `${diasEmAtraso} dia${diasEmAtraso === 1 ? "" : "s"}`,
-                tone: "danger",
-              }}
-              rightText={`${formatCurrency(Math.max(Number(pagamento.saldo ?? 0), 0))} em aberto`}
-              onPress={() => {
-                if (imovel) router.push(`/imoveis/${imovel.id}`);
-                else if (contrato) router.push(`/contratos/${contrato.id}`);
-              }}
-            />
+          {linhasExibidas.map(({ pagamento, contrato, imovel, diasEmAtraso }) => (
+            <Card key={pagamento.id}>
+              <Pressable
+                style={{ gap: 2 }}
+                onPress={() => {
+                  if (imovel) router.push(`/imoveis/${imovel.id}`);
+                  else if (contrato) router.push(`/contratos/${contrato.id}`);
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: spacing.sm,
+                  }}
+                >
+                  <Txt variant="subtitle" numberOfLines={1} style={{ flex: 1 }}>
+                    {imovel?.nome ?? "Imóvel não encontrado"}
+                  </Txt>
+                  <Badge
+                    label={`${diasEmAtraso} dia${diasEmAtraso === 1 ? "" : "s"}`}
+                    tone="danger"
+                  />
+                </View>
+                <Txt variant="muted" numberOfLines={1}>
+                  {contrato?.inquilino?.nome
+                    ? `Inquilino: ${contrato.inquilino.nome}`
+                    : "Inquilino não informado"}
+                </Txt>
+                <Txt variant="muted" numberOfLines={1}>
+                  {`Competência ${formatMonthLabel(pagamento.competencia)} · venc. ${formatDate(pagamento.dataVencimento)}`}
+                </Txt>
+                <Txt variant="muted" numberOfLines={1}>
+                  {`Previsto ${formatCurrency(pagamento.valorPrevisto)} · recebido ${formatCurrency(pagamento.valorPago)}`}
+                </Txt>
+                <Txt variant="subtitle">
+                  {`${formatCurrency(Math.max(Number(pagamento.saldo ?? 0), 0))} em aberto`}
+                </Txt>
+              </Pressable>
+
+              <RegistrarPagamentoControls
+                pagamento={pagamento}
+                onRegistrado={(id) =>
+                  setIdsPagos((prev) => new Set(prev).add(id))
+                }
+              />
+            </Card>
           ))}
         </View>
       )}

@@ -40,8 +40,9 @@ export default function LoginScreen() {
     setEnviando(true);
     try {
       await login(values.usuario, values.senha);
-      // A navegação para (tabs) é feita pelo efeito de redirecionamento em
-      // app/_layout.tsx assim que `usuario` muda no AuthProvider.
+      // A navegação para (tabs) acontece sozinha: assim que `usuario` muda no
+      // AuthProvider, o guard do Stack.Protected em app/_layout.tsx troca de
+      // grupo automaticamente.
     } catch (e) {
       setErro(
         e instanceof ApiError

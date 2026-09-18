@@ -1,5 +1,6 @@
 import type { BadgeTone } from "@/lib/theme";
 import type {
+  FormaPagamento,
   IndiceReajuste,
   ProvedorAutenticacao,
   StatusContrato,
@@ -105,6 +106,16 @@ export const statusUsuarioLabels: Record<StatusUsuario, string> = {
 export const statusUsuarioTone: Record<StatusUsuario, BadgeTone> = {
   ATIVO: "success",
   INATIVO: "muted",
+};
+
+export const formaPagamentoLabels: Record<FormaPagamento, string> = {
+  PIX: "Pix",
+  TRANSFERENCIA: "Transferência",
+  BOLETO: "Boleto",
+  DINHEIRO: "Dinheiro",
+  CARTAO: "Cartão",
+  CHEQUE: "Cheque",
+  OUTRA: "Outra",
 };
 
 export function enumOptions<T extends string>(
