@@ -79,6 +79,28 @@ export function formatMonthLabel(monthKey: string): string {
   return `${MESES_ABREV[idx]}/${String(year).slice(2)}`;
 }
 
+const MESES_COMPLETOS = [
+  "Janeiro",
+  "Fevereiro",
+  "Março",
+  "Abril",
+  "Maio",
+  "Junho",
+  "Julho",
+  "Agosto",
+  "Setembro",
+  "Outubro",
+  "Novembro",
+  "Dezembro",
+];
+
+/** Formata "yyyy-MM" como "Setembro/26" (usado nas listas de aluguéis). */
+export function formatCompetencia(monthKey: string): string {
+  const [year, month] = monthKey.split("-").map(Number);
+  const idx = ((month ?? 1) - 1 + 12) % 12;
+  return `${MESES_COMPLETOS[idx]}/${String(year).slice(2)}`;
+}
+
 /** Converte SNAKE_CASE / UPPER para "Snake case" legível. */
 export function humanizeEnum(value: string | null | undefined): string {
   if (!value) return "—";

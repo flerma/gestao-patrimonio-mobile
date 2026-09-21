@@ -77,6 +77,10 @@ function RootNavigator() {
           name="pagamentos-contrato"
           options={{ title: "Aluguéis" }}
         />
+        <Stack.Screen
+          name="pagamentos-contrato-novo"
+          options={{ title: "Incluir aluguel" }}
+        />
       </Stack.Protected>
 
       <Stack.Protected guard={!usuario}>

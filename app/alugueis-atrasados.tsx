@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Stack, useRouter } from "expo-router";
 
 import { useImoveis } from "@/hooks/use-imoveis";
@@ -7,7 +7,7 @@ import { useContratos } from "@/hooks/use-contratos";
 import { usePagamentosAluguel } from "@/hooks/use-pagamentos-aluguel";
 import { useAuth } from "@/providers/auth";
 import { filtrarPorUsuario, listarAlugueisEmAtraso } from "@/lib/dashboard";
-import { formatCurrency, formatDate, formatMonthLabel } from "@/lib/format";
+import { formatCompetencia, formatCurrency, formatDate } from "@/lib/format";
 import { colors, spacing } from "@/lib/theme";
 import type { UUID } from "@/lib/types";
 import { Screen } from "@/components/ui/Screen";
@@ -20,6 +20,7 @@ import {
   LoadingState,
 } from "@/components/ui/states";
 import { RegistrarPagamentoControls } from "@/components/dashboard/RegistrarPagamentoControls";
+import { ExcluirPagamentoButton } from "@/components/dashboard/ExcluirPagamentoButton";
 
 export default function AlugueisAtrasadosScreen() {
   const router = useRouter();
@@ -61,9 +62,13 @@ export default function AlugueisAtrasadosScreen() {
   // Some da lista assim que marcado como pago, sem esperar o refetch (que
   // de qualquer forma o excluiria, já que deixa de estar em atraso).
   const [idsPagos, setIdsPagos] = React.useState<Set<UUID>>(new Set());
+  const [idsExcluidos, setIdsExcluidos] = React.useState<Set<UUID>>(new Set());
   const linhasExibidas = React.useMemo(
-    () => linhas.filter((l) => !idsPagos.has(l.pagamento.id)),
-    [linhas, idsPagos],
+    () =>
+      linhas.filter(
+        (l) => !idsPagos.has(l.pagamento.id) && !idsExcluidos.has(l.pagamento.id),
+      ),
+    [linhas, idsPagos, idsExcluidos],
   );
 
   const totalEmAberto = linhasExibidas.reduce(
@@ -132,7 +137,7 @@ export default function AlugueisAtrasadosScreen() {
                     : "Inquilino não informado"}
                 </Txt>
                 <Txt variant="muted" numberOfLines={1}>
-                  {`Competência ${formatMonthLabel(pagamento.competencia)} · venc. ${formatDate(pagamento.dataVencimento)}`}
+                  {`Competência ${formatCompetencia(pagamento.competencia)} · venc. ${formatDate(pagamento.dataVencimento)}`}
                 </Txt>
                 <Txt variant="muted" numberOfLines={1}>
                   {`Previsto ${formatCurrency(pagamento.valorPrevisto)} · recebido ${formatCurrency(pagamento.valorPago)}`}
@@ -142,12 +147,20 @@ export default function AlugueisAtrasadosScreen() {
                 </Txt>
               </Pressable>
 
-              <RegistrarPagamentoControls
-                pagamento={pagamento}
-                onRegistrado={(id) =>
-                  setIdsPagos((prev) => new Set(prev).add(id))
-                }
-              />
+              <View style={styles.acoes}>
+                <RegistrarPagamentoControls
+                  pagamento={pagamento}
+                  onRegistrado={(id) =>
+                    setIdsPagos((prev) => new Set(prev).add(id))
+                  }
+                />
+                <ExcluirPagamentoButton
+                  pagamento={pagamento}
+                  onExcluido={(id) =>
+                    setIdsExcluidos((prev) => new Set(prev).add(id))
+                  }
+                />
+              </View>
             </Card>
           ))}
         </View>
@@ -155,3 +168,15 @@ export default function AlugueisAtrasadosScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  acoes: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+});

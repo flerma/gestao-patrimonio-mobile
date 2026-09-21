@@ -1,22 +1,26 @@
 import * as React from "react";
-import { View } from "react-native";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { StyleSheet, View } from "react-native";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import { useContrato } from "@/hooks/use-contratos";
 import { usePagamentosAluguel } from "@/hooks/use-pagamentos-aluguel";
 import { listarPagamentosDoContrato } from "@/lib/dashboard";
-import { formatCurrency, formatDate, formatMonthLabel } from "@/lib/format";
+import { formatCompetencia, formatCurrency, formatDate } from "@/lib/format";
 import { formaPagamentoLabels } from "@/lib/labels";
 import { colors, spacing } from "@/lib/theme";
+import type { UUID } from "@/lib/types";
 import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Txt } from "@/components/ui/Txt";
 import { EmptyState, ErrorState, LoadingState } from "@/components/ui/states";
 import { RegistrarPagamentoControls } from "@/components/dashboard/RegistrarPagamentoControls";
+import { ExcluirPagamentoButton } from "@/components/dashboard/ExcluirPagamentoButton";
+import { Fab } from "@/components/Fab";
 
 export default function PagamentosContratoScreen() {
+  const router = useRouter();
   const { contratoId, atraso } = useLocalSearchParams<{
     contratoId: string;
     atraso?: string;
@@ -34,7 +38,7 @@ export default function PagamentosContratoScreen() {
     pagamentosQuery.refetch();
   };
 
-  const linhas = React.useMemo(() => {
+  const todasAsLinhas = React.useMemo(() => {
     if (!contratoQuery.data) return [];
     const todas = listarPagamentosDoContrato(
       pagamentosQuery.data ?? [],
@@ -45,10 +49,18 @@ export default function PagamentosContratoScreen() {
       : todas;
   }, [contratoQuery.data, pagamentosQuery.data, somenteAtraso]);
 
+  // Some da lista assim que excluído, sem esperar o refetch.
+  const [idsExcluidos, setIdsExcluidos] = React.useState<Set<UUID>>(new Set());
+  const linhas = React.useMemo(
+    () => todasAsLinhas.filter((l) => !idsExcluidos.has(l.pagamento.id)),
+    [todasAsLinhas, idsExcluidos],
+  );
+
   const titulo = somenteAtraso ? "Aluguéis em atraso" : "Todos os aluguéis";
   const contrato = contratoQuery.data;
 
   return (
+    <View style={{ flex: 1 }}>
     <Screen refreshing={refreshing} onRefresh={onRefresh}>
       <Stack.Screen options={{ title: titulo }} />
 
@@ -88,7 +100,7 @@ export default function PagamentosContratoScreen() {
                   }}
                 >
                   <Txt variant="subtitle">
-                    {formatMonthLabel(pagamento.competencia)}
+                    {formatCompetencia(pagamento.competencia)}
                   </Txt>
                   {emAtraso ? (
                     <Badge
@@ -119,17 +131,50 @@ export default function PagamentosContratoScreen() {
                     : ""}
                 </Txt>
 
-                {emAtraso ? (
-                  <RegistrarPagamentoControls
+                <View
+                  style={[
+                    styles.acoes,
+                    { justifyContent: emAtraso ? "space-between" : "flex-end" },
+                  ]}
+                >
+                  {emAtraso ? (
+                    <RegistrarPagamentoControls
+                      pagamento={pagamento}
+                      onRegistrado={() => {}}
+                    />
+                  ) : null}
+                  <ExcluirPagamentoButton
                     pagamento={pagamento}
-                    onRegistrado={() => {}}
+                    onExcluido={(id) =>
+                      setIdsExcluidos((prev) => new Set(prev).add(id))
+                    }
                   />
-                ) : null}
+                </View>
               </Card>
             );
           })}
         </View>
       )}
     </Screen>
+    {!somenteAtraso && contratoId ? (
+      <Fab
+        onPress={() =>
+          router.push(`/pagamentos-contrato-novo?contratoId=${contratoId}`)
+        }
+      />
+    ) : null}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  acoes: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+});
