@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -185,36 +185,42 @@ export default function DashboardScreen() {
             {dados.imoveisUsuario.length === 0 ? (
               <Txt variant="muted">Nenhum imóvel para este usuário.</Txt>
             ) : (
-              dados.imoveisUsuario.map((imovel) => (
-                <Pressable
-                  key={imovel.id}
-                  style={styles.imovelRow}
-                  onPress={() => router.push(`/imoveis/${imovel.id}`)}
-                >
-                  <View style={styles.flex}>
-                    <Txt variant="subtitle" numberOfLines={1}>
-                      {imovel.nome}
-                    </Txt>
-                    <Txt variant="muted">
-                      {tipoImovelLabels[imovel.tipo]}
-                      {imovel.endereco?.cidade
-                        ? ` · ${imovel.endereco.cidade}`
-                        : ""}
-                    </Txt>
-                  </View>
-                  <View style={styles.imovelRight}>
-                    <Badge
-                      label={statusImovelLabels[imovel.status]}
-                      tone={statusImovelTone[imovel.status]}
-                    />
-                    <Txt variant="muted">
-                      {aluguelPorImovel.has(imovel.id)
-                        ? `${formatCurrency(aluguelPorImovel.get(imovel.id))}/mês`
-                        : formatCurrency(imovel.valorAtual)}
-                    </Txt>
-                  </View>
-                </Pressable>
-              ))
+              <ScrollView
+                style={styles.imoveisLista}
+                nestedScrollEnabled
+                showsVerticalScrollIndicator
+              >
+                {dados.imoveisUsuario.map((imovel) => (
+                  <Pressable
+                    key={imovel.id}
+                    style={styles.imovelRow}
+                    onPress={() => router.push(`/imoveis/${imovel.id}`)}
+                  >
+                    <View style={styles.flex}>
+                      <Txt variant="subtitle" numberOfLines={1}>
+                        {imovel.nome}
+                      </Txt>
+                      <Txt variant="muted">
+                        {tipoImovelLabels[imovel.tipo]}
+                        {imovel.endereco?.cidade
+                          ? ` · ${imovel.endereco.cidade}`
+                          : ""}
+                      </Txt>
+                    </View>
+                    <View style={styles.imovelRight}>
+                      <Badge
+                        label={statusImovelLabels[imovel.status]}
+                        tone={statusImovelTone[imovel.status]}
+                      />
+                      <Txt variant="muted">
+                        {aluguelPorImovel.has(imovel.id)
+                          ? `${formatCurrency(aluguelPorImovel.get(imovel.id))}/mês`
+                          : formatCurrency(imovel.valorAtual)}
+                      </Txt>
+                    </View>
+                  </Pressable>
+                ))}
+              </ScrollView>
             )}
           </Card>
         </View>
@@ -236,6 +242,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: spacing.md,
   },
+  imoveisLista: { maxHeight: 260 },
   imovelRow: {
     flexDirection: "row",
     alignItems: "center",

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -27,47 +27,54 @@ export function AlertsList({ alertas }: { alertas: Alerta[] }) {
     );
   }
   return (
-    <View style={{ gap: spacing.sm }}>
-      {alertas.map((a) => {
-        const c = cfg[a.severidade];
-        const body = (
-          <>
-            <Ionicons name={c.icon} size={18} color={c.color} />
-            <View style={styles.text}>
-              <Txt variant="subtitle">{a.titulo}</Txt>
-              <Txt variant="muted">{a.descricao}</Txt>
-            </View>
-            {a.href ? (
-              <Ionicons name="chevron-forward" size={16} color={c.color} />
-            ) : null}
-          </>
-        );
-
-        if (a.href) {
-          const href = a.href;
-          return (
-            <Pressable
-              key={a.id}
-              style={[styles.item, { backgroundColor: c.bg }]}
-              onPress={() => router.push(href)}
-            >
-              {body}
-            </Pressable>
+    <ScrollView
+      style={styles.lista}
+      nestedScrollEnabled
+      showsVerticalScrollIndicator
+    >
+      <View style={{ gap: spacing.sm }}>
+        {alertas.map((a) => {
+          const c = cfg[a.severidade];
+          const body = (
+            <>
+              <Ionicons name={c.icon} size={18} color={c.color} />
+              <View style={styles.text}>
+                <Txt variant="subtitle">{a.titulo}</Txt>
+                <Txt variant="muted">{a.descricao}</Txt>
+              </View>
+              {a.href ? (
+                <Ionicons name="chevron-forward" size={16} color={c.color} />
+              ) : null}
+            </>
           );
-        }
 
-        return (
-          <View key={a.id} style={[styles.item, { backgroundColor: c.bg }]}>
-            {body}
-          </View>
-        );
-      })}
-    </View>
+          if (a.href) {
+            const href = a.href;
+            return (
+              <Pressable
+                key={a.id}
+                style={[styles.item, { backgroundColor: c.bg }]}
+                onPress={() => router.push(href)}
+              >
+                {body}
+              </Pressable>
+            );
+          }
+
+          return (
+            <View key={a.id} style={[styles.item, { backgroundColor: c.bg }]}>
+              {body}
+            </View>
+          );
+        })}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   empty: { textAlign: "center", paddingVertical: spacing.lg },
+  lista: { maxHeight: 160 },
   item: {
     flexDirection: "row",
     alignItems: "center",
