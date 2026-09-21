@@ -29,7 +29,12 @@ export function useAuth(): AuthContextValue {
 }
 
 function paraUsuarioSessao(usuario: UsuarioAutenticado): UsuarioSessao {
-  return { id: usuario.id, nome: usuario.nome, email: usuario.email };
+  return {
+    id: usuario.id,
+    nome: usuario.nome,
+    email: usuario.email,
+    role: usuario.role,
+  };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {

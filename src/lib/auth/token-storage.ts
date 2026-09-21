@@ -1,6 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 
-import type { UUID } from "@/lib/types";
+import type { RoleUsuario, UUID } from "@/lib/types";
 
 const ACCESS_TOKEN_KEY = "gpi_access_token";
 const REFRESH_TOKEN_KEY = "gpi_refresh_token";
@@ -11,6 +11,7 @@ export interface UsuarioSessao {
   id: UUID;
   nome: string;
   email: string;
+  role: RoleUsuario;
 }
 
 export interface Sessao {

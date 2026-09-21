@@ -2,6 +2,7 @@ import { apiFetch } from "./client";
 import type {
   IsoDateTime,
   ProvedorAutenticacao,
+  RoleUsuario,
   StatusUsuario,
   UUID,
 } from "@/lib/types";
@@ -22,6 +23,7 @@ export interface UsuarioAutenticado {
   provedorAutenticacao: ProvedorAutenticacao;
   idUsuarioProvedor?: string | null;
   status: StatusUsuario;
+  role: RoleUsuario;
   dataCriacao: IsoDateTime;
   dataAtualizacao: IsoDateTime;
 }

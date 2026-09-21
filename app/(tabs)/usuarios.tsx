@@ -3,9 +3,11 @@ import { View } from "react-native";
 import { useRouter } from "expo-router";
 
 import { useExcluirUsuario, useUsuarios } from "@/hooks/use-usuarios";
+import { useExigirAdmin } from "@/hooks/use-exigir-admin";
 import { formatDate } from "@/lib/format";
 import {
   provedorAutenticacaoLabels,
+  roleUsuarioLabels,
   statusUsuarioLabels,
   statusUsuarioTone,
 } from "@/lib/labels";
@@ -21,10 +23,19 @@ import { ConfirmDelete } from "@/components/ConfirmDelete";
 
 export default function UsuariosScreen() {
   const router = useRouter();
+  const autorizado = useExigirAdmin();
   const { data, isLoading, error, refetch, isRefetching } = useUsuarios();
   const excluir = useExcluirUsuario();
   const [busca, setBusca] = React.useState("");
   const [alvo, setAlvo] = React.useState<UsuarioResponse | null>(null);
+
+  if (!autorizado) {
+    return (
+      <Screen>
+        <LoadingState />
+      </Screen>
+    );
+  }
 
   const filtrados = React.useMemo(() => {
     const termo = busca.trim().toLowerCase();
@@ -73,7 +84,7 @@ export default function UsuariosScreen() {
                 title={u.nome}
                 lines={[
                   u.email,
-                  `${provedorAutenticacaoLabels[u.provedorAutenticacao]} · ${formatDate(
+                  `${roleUsuarioLabels[u.role]} · ${provedorAutenticacaoLabels[u.provedorAutenticacao]} · ${formatDate(
                     u.dataCriacao,
                   )}`,
                 ]}

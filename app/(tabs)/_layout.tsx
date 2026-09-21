@@ -34,6 +34,9 @@ function HeaderUsuario() {
 }
 
 export default function TabsLayout() {
+  const { usuario } = useAuth();
+  const isAdmin = usuario?.role === "ADMIN";
+
   return (
     <Tabs
       screenOptions={{
@@ -87,6 +90,10 @@ export default function TabsLayout() {
         name="usuarios"
         options={{
           title: "Usuários",
+          // Gestão de usuários é exclusiva de ADMIN (o backend também bloqueia
+          // /api/usuarios/** para quem não tem essa role) — href: null tira a
+          // aba da tab bar sem remover a rota do arquivo.
+          href: isAdmin ? undefined : null,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" color={color} size={size} />
           ),

@@ -15,6 +15,9 @@ export type ProvedorAutenticacao = (typeof PROVEDOR_AUTENTICACAO)[number];
 export const STATUS_USUARIO = ["ATIVO", "INATIVO"] as const;
 export type StatusUsuario = (typeof STATUS_USUARIO)[number];
 
+export const ROLE_USUARIO = ["ADMIN", "USUARIO"] as const;
+export type RoleUsuario = (typeof ROLE_USUARIO)[number];
+
 export const TIPO_IMOVEL = [
   "CASA",
   "APARTAMENTO",
@@ -120,6 +123,7 @@ export interface UsuarioResponse {
   provedorAutenticacao: ProvedorAutenticacao;
   idUsuarioProvedor?: string | null;
   status: StatusUsuario;
+  role: RoleUsuario;
   dataCriacao: IsoDateTime;
   dataAtualizacao: IsoDateTime;
 }
@@ -131,6 +135,7 @@ export interface UsuarioRequest {
   provedorAutenticacao: ProvedorAutenticacao;
   idUsuarioProvedor?: string | null;
   status?: StatusUsuario | null;
+  role: RoleUsuario;
 }
 
 // ---------- Imóvel ----------
