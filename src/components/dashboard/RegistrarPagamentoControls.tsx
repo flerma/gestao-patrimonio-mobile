@@ -69,11 +69,7 @@ export function RegistrarPagamentoControls({
         accessibilityRole="button"
         accessibilityLabel="Marcar como pago"
       >
-        <Ionicons
-          name="checkmark-circle-outline"
-          size={24}
-          color={colors.success}
-        />
+        <Ionicons name="cash-outline" size={24} color={colors.success} />
       </Pressable>
 
       <Modal
