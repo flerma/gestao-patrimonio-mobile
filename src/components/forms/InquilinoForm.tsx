@@ -19,6 +19,7 @@ import {
 } from "@/lib/labels";
 import { isValidCnpj, isValidCpf } from "@/lib/documento";
 import { ufOptions } from "@/lib/uf";
+import { ApiError } from "@/lib/api";
 import { spacing } from "@/lib/theme";
 import { useSalvarInquilino } from "@/hooks/use-inquilinos";
 import { Button } from "@/components/ui/Button";
@@ -76,7 +77,7 @@ export function InquilinoForm({ inquilino }: { inquilino?: InquilinoResponse }) 
   const router = useRouter();
   const salvar = useSalvarInquilino(inquilino?.id);
 
-  const { control, handleSubmit, setValue, setFocus } = useForm<FormValues>({
+  const { control, handleSubmit, setValue, setFocus, setError } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       tipoPessoa: inquilino?.tipoPessoa ?? "FISICA",
@@ -140,7 +141,19 @@ export function InquilinoForm({ inquilino }: { inquilino?: InquilinoResponse }) 
         : undefined,
       observacoes: values.observacoes || undefined,
     };
-    salvar.mutate(payload, { onSuccess: () => router.back() });
+    salvar.mutate(payload, {
+      onSuccess: () => router.back(),
+      onError: (error) => {
+        if (error instanceof ApiError && error.body && typeof error.body === "object") {
+          const body = error.body as { campo?: string; message?: string };
+          if (body.campo === "documento") {
+            setError("documento", {
+              message: body.message ?? "CPF/CNPJ já cadastrado.",
+            });
+          }
+        }
+      },
+    });
   };
 
   return (
