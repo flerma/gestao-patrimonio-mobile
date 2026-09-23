@@ -178,6 +178,51 @@ export function SelectField<T extends FieldValues>({
   );
 }
 
+export interface NumberOption {
+  value: number;
+  label: string;
+}
+
+/** Como SelectField, mas o valor do campo é um número (ex.: dia do mês). */
+export function NumberSelectField<T extends FieldValues>({
+  control,
+  name,
+  label,
+  options,
+  placeholder = "Selecione…",
+  hint,
+}: BaseProps<T> & { options: NumberOption[] }) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <Field label={label} error={fieldState.error?.message} hint={hint}>
+          <View style={[styles.input, styles.pickerWrap, fieldState.error && styles.inputError]}>
+            <Picker
+              selectedValue={
+                field.value === undefined || field.value === null
+                  ? ""
+                  : String(field.value)
+              }
+              onValueChange={(v) =>
+                field.onChange(v === "" ? undefined : Number(v))
+              }
+              dropdownIconColor={colors.textMuted}
+              style={styles.picker}
+            >
+              <Picker.Item label={placeholder} value="" color={colors.textFaint} />
+              {options.map((o) => (
+                <Picker.Item key={o.value} label={o.label} value={String(o.value)} />
+              ))}
+            </Picker>
+          </View>
+        </Field>
+      )}
+    />
+  );
+}
+
 export function DateField<T extends FieldValues>({
   control,
   name,

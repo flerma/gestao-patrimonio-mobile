@@ -26,7 +26,19 @@ import { useImoveis } from "@/hooks/use-imoveis";
 import { useInquilinos } from "@/hooks/use-inquilinos";
 import { Button } from "@/components/ui/Button";
 import { Card, CardTitle } from "@/components/ui/Card";
-import { DateField, SelectField, TextAreaField, TextField } from "./fields";
+import {
+  DateField,
+  NumberSelectField,
+  SelectField,
+  TextAreaField,
+  TextField,
+} from "./fields";
+import { MoneyField } from "./MoneyField";
+
+const DIAS_VENCIMENTO = Array.from({ length: 31 }, (_, i) => ({
+  value: i + 1,
+  label: String(i + 1),
+}));
 
 const schema = z
   .object({
@@ -141,17 +153,16 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
           name="dataFim"
           label="Fim da vigência (opcional)"
         />
-        <TextField
+        <MoneyField
           control={control}
           name="valorAluguel"
           label="Valor do aluguel (R$)"
-          numeric
         />
-        <TextField
+        <NumberSelectField
           control={control}
           name="diaVencimento"
           label="Dia de vencimento"
-          numeric
+          options={DIAS_VENCIMENTO}
         />
       </Card>
 
@@ -181,11 +192,10 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
           label="Tipo de garantia"
           options={enumOptions(TIPO_GARANTIA, tipoGarantiaLabels)}
         />
-        <TextField
+        <MoneyField
           control={control}
           name="valorGarantia"
           label="Valor da garantia (R$)"
-          numeric
         />
       </Card>
 

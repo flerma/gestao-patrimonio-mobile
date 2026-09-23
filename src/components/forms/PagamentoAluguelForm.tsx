@@ -12,6 +12,7 @@ import { useSalvarPagamentoAluguel } from "@/hooks/use-pagamentos-aluguel";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { DateField, SelectField, TextField } from "./fields";
+import { MoneyField } from "./MoneyField";
 
 const PAGO_OPCOES = [
   { value: "NAO", label: "Não" },
@@ -95,11 +96,10 @@ export function PagamentoAluguelForm({ contratoId }: { contratoId: UUID }) {
           name="dataVencimento"
           label="Data de vencimento"
         />
-        <TextField
+        <MoneyField
           control={control}
           name="valorPrevisto"
           label="Valor previsto (R$)"
-          numeric
         />
         <SelectField
           control={control}

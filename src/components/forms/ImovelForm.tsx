@@ -21,6 +21,7 @@ import { Card, CardTitle } from "@/components/ui/Card";
 import { SelectField, TextField } from "./fields";
 import { CepField } from "./CepField";
 import { CidadeField } from "./CidadeField";
+import { MoneyField } from "./MoneyField";
 
 const schema = z.object({
   nome: z.string().trim().min(1, "Informe o nome do imóvel"),
@@ -114,17 +115,15 @@ export function ImovelForm({ imovel }: { imovel?: ImovelResponse }) {
           label="Status"
           options={enumOptions(STATUS_IMOVEL, statusImovelLabels)}
         />
-        <TextField
+        <MoneyField
           control={control}
           name="valorAquisicao"
           label="Valor de aquisição (R$)"
-          numeric
         />
-        <TextField
+        <MoneyField
           control={control}
           name="valorAtual"
           label="Valor atual (R$)"
-          numeric
         />
       </Card>
 
