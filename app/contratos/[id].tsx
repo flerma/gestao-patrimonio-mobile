@@ -2,7 +2,7 @@ import * as React from "react";
 import { View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
-import { useContrato } from "@/hooks/use-contratos";
+import { useContrato, useExcluirContrato } from "@/hooks/use-contratos";
 import { usePagamentosAluguel } from "@/hooks/use-pagamentos-aluguel";
 import { calcularResumoPagamentos } from "@/lib/dashboard";
 import { formatCurrency } from "@/lib/format";
@@ -13,12 +13,16 @@ import { Card } from "@/components/ui/Card";
 import { Txt } from "@/components/ui/Txt";
 import { ErrorState, LoadingState } from "@/components/ui/states";
 import { ContratoForm } from "@/components/forms/ContratoForm";
+import { DeleteHeaderButton } from "@/components/DeleteHeaderButton";
+import { ConfirmDelete } from "@/components/ConfirmDelete";
 
 export default function ContratoDetalheScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { data, isLoading, error, refetch } = useContrato(id);
   const pagamentosQuery = usePagamentosAluguel(id);
+  const excluir = useExcluirContrato();
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
 
   const resumo = React.useMemo(
     () => calcularResumoPagamentos(pagamentosQuery.data ?? []),
@@ -30,6 +34,9 @@ export default function ContratoDetalheScreen() {
       <Stack.Screen
         options={{
           title: data ? `Contrato · ${data.imovel?.nome ?? "Imóvel"}` : "Contrato",
+          headerRight: data
+            ? () => <DeleteHeaderButton onPress={() => setConfirmOpen(true)} />
+            : undefined,
         }}
       />
       {isLoading ? (
@@ -95,6 +102,19 @@ export default function ContratoDetalheScreen() {
           <ContratoForm contrato={data} />
         </>
       )}
+
+      <ConfirmDelete
+        visible={confirmOpen}
+        itemLabel={data ? `contrato de ${data.imovel?.nome ?? "imóvel"}` : ""}
+        deleting={excluir.isPending}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          if (data) {
+            excluir.mutate(data.id, { onSuccess: () => router.back() });
+          }
+          setConfirmOpen(false);
+        }}
+      />
     </Screen>
   );
 }
