@@ -1,7 +1,7 @@
 import * as React from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -17,33 +17,59 @@ import {
   statusInquilinoLabels,
   tipoPessoaLabels,
 } from "@/lib/labels";
+import { isValidCnpj, isValidCpf } from "@/lib/documento";
+import { ufOptions } from "@/lib/uf";
 import { spacing } from "@/lib/theme";
 import { useSalvarInquilino } from "@/hooks/use-inquilinos";
 import { Button } from "@/components/ui/Button";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { DateField, SelectField, TextAreaField, TextField } from "./fields";
 import { CepField } from "./CepField";
+import { CidadeField } from "./CidadeField";
+import { DocumentoField } from "./DocumentoField";
 
-const schema = z.object({
-  tipoPessoa: z.enum(TIPO_PESSOA),
-  nome: z.string().trim().min(1, "Informe o nome"),
-  documento: z.string().trim().min(1, "Informe o CPF/CNPJ"),
-  email: z.string().trim().email("E-mail inválido").optional().or(z.literal("")),
-  telefone: z.string().optional(),
-  dataNascimento: z.string().optional(),
-  status: z.enum(STATUS_INQUILINO),
-  endereco: z.object({
-    cep: z.string().optional(),
-    logradouro: z.string().optional(),
-    numero: z.string().optional(),
-    complemento: z.string().optional(),
-    bairro: z.string().optional(),
-    cidade: z.string().optional(),
-    estado: z.string().max(2, "Use a sigla (ex.: SP)").optional(),
-    pais: z.string().optional(),
-  }),
-  observacoes: z.string().max(1000).optional(),
-});
+const schema = z
+  .object({
+    tipoPessoa: z.enum(TIPO_PESSOA),
+    nome: z.string().trim().min(1, "Informe o nome"),
+    documento: z.string().trim().min(1, "Informe o CPF/CNPJ"),
+    email: z
+      .string()
+      .trim()
+      .email("E-mail inválido")
+      .optional()
+      .or(z.literal("")),
+    telefone: z.string().optional(),
+    dataNascimento: z.string().optional(),
+    status: z.enum(STATUS_INQUILINO),
+    endereco: z.object({
+      cep: z.string().optional(),
+      logradouro: z.string().optional(),
+      numero: z.string().optional(),
+      complemento: z.string().optional(),
+      bairro: z.string().optional(),
+      cidade: z.string().optional(),
+      estado: z.string().max(2, "Use a sigla (ex.: SP)").optional(),
+      pais: z.string().optional(),
+    }),
+    observacoes: z.string().max(1000).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.tipoPessoa === "FISICA" && !isValidCpf(data.documento)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["documento"],
+        message: "CPF inválido",
+      });
+    }
+    if (data.tipoPessoa === "JURIDICA" && !isValidCnpj(data.documento)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["documento"],
+        message: "CNPJ inválido",
+      });
+    }
+  });
 type FormValues = z.infer<typeof schema>;
 
 export function InquilinoForm({ inquilino }: { inquilino?: InquilinoResponse }) {
@@ -74,11 +100,24 @@ export function InquilinoForm({ inquilino }: { inquilino?: InquilinoResponse }) 
     },
   });
 
+  const tipoPessoa = useWatch({ control, name: "tipoPessoa" });
+  const tipoPessoaAnteriorRef = React.useRef(tipoPessoa);
+  React.useEffect(() => {
+    if (tipoPessoaAnteriorRef.current !== tipoPessoa) {
+      setValue("documento", "");
+      tipoPessoaAnteriorRef.current = tipoPessoa;
+    }
+  }, [tipoPessoa, setValue]);
+
+  const estado = useWatch({ control, name: "endereco.estado" });
+
   const preencherEndereco = (endereco: Endereco) => {
     setValue("endereco.logradouro", endereco.logradouro ?? "");
     setValue("endereco.bairro", endereco.bairro ?? "");
-    setValue("endereco.cidade", endereco.cidade ?? "");
+    // Estado antes de cidade: o combo de cidade depende do estado para
+    // buscar a lista de municípios do IBGE.
     setValue("endereco.estado", endereco.estado ?? "");
+    setValue("endereco.cidade", endereco.cidade ?? "");
     if (endereco.pais) setValue("endereco.pais", endereco.pais);
     setFocus("endereco.numero");
   };
@@ -120,7 +159,11 @@ export function InquilinoForm({ inquilino }: { inquilino?: InquilinoResponse }) 
           options={enumOptions(STATUS_INQUILINO, statusInquilinoLabels)}
         />
         <TextField control={control} name="nome" label="Nome / Razão social" />
-        <TextField control={control} name="documento" label="CPF / CNPJ" />
+        <DocumentoField
+          control={control}
+          name="documento"
+          pessoaFisica={tipoPessoa === "FISICA"}
+        />
         <TextField
           control={control}
           name="email"
@@ -160,13 +203,14 @@ export function InquilinoForm({ inquilino }: { inquilino?: InquilinoResponse }) 
           label="Complemento"
         />
         <TextField control={control} name="endereco.bairro" label="Bairro" />
-        <TextField control={control} name="endereco.cidade" label="Cidade" />
-        <TextField
+        <SelectField
           control={control}
           name="endereco.estado"
           label="Estado (UF)"
-          autoCapitalize="words"
+          options={ufOptions}
+          onValueChange={() => setValue("endereco.cidade", "")}
         />
+        <CidadeField control={control} name="endereco.cidade" uf={estado} />
         <TextField control={control} name="endereco.pais" label="País" />
       </Card>
 

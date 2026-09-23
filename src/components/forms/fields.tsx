@@ -140,7 +140,14 @@ export function SelectField<T extends FieldValues>({
   options,
   placeholder = "Selecione…",
   hint,
-}: BaseProps<T> & { options: Option[] }) {
+  onValueChange,
+  enabled = true,
+}: BaseProps<T> & {
+  options: Option[];
+  /** Chamado apenas quando o usuário escolhe um valor (não em sets programáticos). */
+  onValueChange?: (value: string | undefined) => void;
+  enabled?: boolean;
+}) {
   return (
     <Controller
       control={control}
@@ -150,7 +157,12 @@ export function SelectField<T extends FieldValues>({
           <View style={[styles.input, styles.pickerWrap, fieldState.error && styles.inputError]}>
             <Picker
               selectedValue={field.value ?? ""}
-              onValueChange={(v) => field.onChange(v === "" ? undefined : v)}
+              onValueChange={(v) => {
+                const value = v === "" ? undefined : v;
+                field.onChange(value);
+                onValueChange?.(value);
+              }}
+              enabled={enabled}
               dropdownIconColor={colors.textMuted}
               style={styles.picker}
             >

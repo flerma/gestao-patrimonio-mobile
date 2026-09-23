@@ -1,7 +1,7 @@
 import * as React from "react";
 import { View } from "react-native";
 import { useRouter } from "expo-router";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -13,12 +13,14 @@ import {
   type ImovelResponse,
 } from "@/lib/types";
 import { enumOptions, statusImovelLabels, tipoImovelLabels } from "@/lib/labels";
+import { ufOptions } from "@/lib/uf";
 import { spacing } from "@/lib/theme";
 import { useSalvarImovel } from "@/hooks/use-imoveis";
 import { Button } from "@/components/ui/Button";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { SelectField, TextField } from "./fields";
 import { CepField } from "./CepField";
+import { CidadeField } from "./CidadeField";
 
 const schema = z.object({
   nome: z.string().trim().min(1, "Informe o nome do imóvel"),
@@ -68,11 +70,15 @@ export function ImovelForm({ imovel }: { imovel?: ImovelResponse }) {
     },
   });
 
+  const estado = useWatch({ control, name: "endereco.estado" });
+
   const preencherEndereco = (endereco: Endereco) => {
     setValue("endereco.logradouro", endereco.logradouro ?? "");
     setValue("endereco.bairro", endereco.bairro ?? "");
-    setValue("endereco.cidade", endereco.cidade ?? "");
+    // Estado antes de cidade: o combo de cidade depende do estado para
+    // buscar a lista de municípios do IBGE.
     setValue("endereco.estado", endereco.estado ?? "");
+    setValue("endereco.cidade", endereco.cidade ?? "");
     if (endereco.pais) setValue("endereco.pais", endereco.pais);
     setFocus("endereco.numero");
   };
@@ -141,13 +147,14 @@ export function ImovelForm({ imovel }: { imovel?: ImovelResponse }) {
           label="Complemento"
         />
         <TextField control={control} name="endereco.bairro" label="Bairro" />
-        <TextField control={control} name="endereco.cidade" label="Cidade" />
-        <TextField
+        <SelectField
           control={control}
           name="endereco.estado"
           label="Estado (UF)"
-          autoCapitalize="words"
+          options={ufOptions}
+          onValueChange={() => setValue("endereco.cidade", "")}
         />
+        <CidadeField control={control} name="endereco.cidade" uf={estado} />
         <TextField control={control} name="endereco.pais" label="País" />
       </Card>
 

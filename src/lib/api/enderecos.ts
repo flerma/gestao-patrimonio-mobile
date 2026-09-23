@@ -9,4 +9,7 @@ export const enderecosApi = {
     const limpo = cep.replace(/\D/g, "");
     return apiFetch<Endereco>(`${BASE}/cep/${limpo}`);
   },
+  /** Lista os municípios de uma UF (sigla de 2 letras), em ordem alfabética. */
+  listarMunicipios: (uf: string) =>
+    apiFetch<string[]>(`${BASE}/municipios/${uf}`),
 };
