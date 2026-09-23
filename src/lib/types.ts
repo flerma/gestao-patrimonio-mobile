@@ -225,6 +225,8 @@ export interface ContratoRequest {
   tipoGarantia?: TipoGarantia | null;
   valorGarantia?: number | null;
   observacoes?: string | null;
+  /** Só é considerado quando a data de início gera parcelas com competência anterior ao mês atual. */
+  marcarParcelasAnterioresComoPagas?: boolean | null;
 }
 
 // ---------- Pagamento de aluguel ----------

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { View } from "react-native";
+import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,12 +20,13 @@ import {
   tipoContratoLabels,
   tipoGarantiaLabels,
 } from "@/lib/labels";
-import { spacing } from "@/lib/theme";
+import { colors, radius, spacing } from "@/lib/theme";
 import { useSalvarContrato } from "@/hooks/use-contratos";
 import { useImoveis } from "@/hooks/use-imoveis";
 import { useInquilinos } from "@/hooks/use-inquilinos";
 import { Button } from "@/components/ui/Button";
 import { Card, CardTitle } from "@/components/ui/Card";
+import { Txt } from "@/components/ui/Txt";
 import {
   DateField,
   NumberSelectField,
@@ -39,6 +40,19 @@ const DIAS_VENCIMENTO = Array.from({ length: 31 }, (_, i) => ({
   value: i + 1,
   label: String(i + 1),
 }));
+
+/** yyyy-MM-dd está em um mês anterior ao mês corrente. */
+function competenciaAnteriorAoMesAtual(dataInicio: string): boolean {
+  const match = dataInicio.match(/^(\d{4})-(\d{2})/);
+  if (!match) return false;
+  const [, anoStr, mesStr] = match;
+  const ano = Number(anoStr);
+  const mes = Number(mesStr);
+  const agora = new Date();
+  const anoAtual = agora.getFullYear();
+  const mesAtual = agora.getMonth() + 1;
+  return ano < anoAtual || (ano === anoAtual && mes < mesAtual);
+}
 
 const schema = z
   .object({
@@ -95,6 +109,13 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
     },
   });
 
+  const [payloadPendente, setPayloadPendente] =
+    React.useState<ContratoRequest | null>(null);
+
+  const enviar = (payload: ContratoRequest) => {
+    salvar.mutate(payload, { onSuccess: () => router.back() });
+  };
+
   const onSubmit = (values: FormValues) => {
     const payload: ContratoRequest = {
       imovelId: values.imovelId,
@@ -112,7 +133,20 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
       valorGarantia: values.valorGarantia,
       observacoes: values.observacoes || undefined,
     };
-    salvar.mutate(payload, { onSuccess: () => router.back() });
+    if (competenciaAnteriorAoMesAtual(values.dataInicio)) {
+      setPayloadPendente(payload);
+      return;
+    }
+    enviar(payload);
+  };
+
+  const confirmarParcelasAnteriores = (marcarComoPagas: boolean) => {
+    if (!payloadPendente) return;
+    enviar({
+      ...payloadPendente,
+      marcarParcelasAnterioresComoPagas: marcarComoPagas,
+    });
+    setPayloadPendente(null);
   };
 
   return (
@@ -213,6 +247,58 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
         onPress={handleSubmit(onSubmit)}
       />
       <Button title="Cancelar" variant="ghost" onPress={() => router.back()} />
+
+      <Modal
+        visible={payloadPendente !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPayloadPendente(null)}
+      >
+        <Pressable
+          style={styles.backdrop}
+          onPress={() => setPayloadPendente(null)}
+        >
+          <Pressable style={styles.card} onPress={() => {}}>
+            <Txt variant="subtitle">Parcelas anteriores ao mês atual</Txt>
+            <Txt variant="muted">
+              A data de início de vigência gera aluguéis com competência
+              anterior ao mês atual. Deseja que essas parcelas sejam criadas
+              já como pagas (via Pix, na data de vencimento de cada uma) ou
+              como pendentes e em atraso?
+            </Txt>
+            <View style={styles.acoes}>
+              <Button
+                title="Pendentes"
+                variant="outline"
+                onPress={() => confirmarParcelasAnteriores(false)}
+                style={styles.flex}
+              />
+              <Button
+                title="Pagas"
+                onPress={() => confirmarParcelasAnteriores(true)}
+                style={styles.flex}
+              />
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "center",
+    padding: spacing.xl,
+  },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+    gap: spacing.md,
+  },
+  acoes: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.xs },
+  flex: { flex: 1 },
+});
