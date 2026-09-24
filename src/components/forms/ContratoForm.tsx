@@ -138,7 +138,9 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
       observacoes: values.observacoes || undefined,
     };
 
-    const precisaParcelasAnteriores = competenciaAnteriorAoMesAtual(values.dataInicio);
+    const dataInicioMudou = contrato === undefined || contrato.dataInicio !== values.dataInicio;
+    const precisaParcelasAnteriores =
+      dataInicioMudou && competenciaAnteriorAoMesAtual(values.dataInicio);
     const precisaVencimentoFuturo =
       contrato !== undefined && contrato.diaVencimento !== values.diaVencimento;
 
