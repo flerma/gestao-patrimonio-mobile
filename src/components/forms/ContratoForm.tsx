@@ -109,8 +109,12 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
     },
   });
 
-  const [payloadPendente, setPayloadPendente] =
-    React.useState<ContratoRequest | null>(null);
+  type EtapaConfirmacao = "parcelas-anteriores" | "vencimento-futuro";
+  const [confirmacao, setConfirmacao] = React.useState<{
+    payload: ContratoRequest;
+    etapa: EtapaConfirmacao;
+    precisaVencimentoFuturo: boolean;
+  } | null>(null);
 
   const enviar = (payload: ContratoRequest) => {
     salvar.mutate(payload, { onSuccess: () => router.back() });
@@ -133,20 +137,47 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
       valorGarantia: values.valorGarantia,
       observacoes: values.observacoes || undefined,
     };
-    if (competenciaAnteriorAoMesAtual(values.dataInicio)) {
-      setPayloadPendente(payload);
+
+    const precisaParcelasAnteriores = competenciaAnteriorAoMesAtual(values.dataInicio);
+    const precisaVencimentoFuturo =
+      contrato !== undefined && contrato.diaVencimento !== values.diaVencimento;
+
+    if (precisaParcelasAnteriores) {
+      setConfirmacao({ payload, etapa: "parcelas-anteriores", precisaVencimentoFuturo });
+      return;
+    }
+    if (precisaVencimentoFuturo) {
+      setConfirmacao({ payload, etapa: "vencimento-futuro", precisaVencimentoFuturo: false });
       return;
     }
     enviar(payload);
   };
 
   const confirmarParcelasAnteriores = (marcarComoPagas: boolean) => {
-    if (!payloadPendente) return;
-    enviar({
-      ...payloadPendente,
+    if (!confirmacao) return;
+    const payloadAtualizado: ContratoRequest = {
+      ...confirmacao.payload,
       marcarParcelasAnterioresComoPagas: marcarComoPagas,
+    };
+    if (confirmacao.precisaVencimentoFuturo) {
+      setConfirmacao({
+        payload: payloadAtualizado,
+        etapa: "vencimento-futuro",
+        precisaVencimentoFuturo: false,
+      });
+      return;
+    }
+    enviar(payloadAtualizado);
+    setConfirmacao(null);
+  };
+
+  const confirmarVencimentoFuturo = (atualizar: boolean) => {
+    if (!confirmacao) return;
+    enviar({
+      ...confirmacao.payload,
+      atualizarVencimentoParcelasFuturas: atualizar,
     });
-    setPayloadPendente(null);
+    setConfirmacao(null);
   };
 
   return (
@@ -249,15 +280,12 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
       <Button title="Cancelar" variant="ghost" onPress={() => router.back()} />
 
       <Modal
-        visible={payloadPendente !== null}
+        visible={confirmacao?.etapa === "parcelas-anteriores"}
         transparent
         animationType="fade"
-        onRequestClose={() => setPayloadPendente(null)}
+        onRequestClose={() => setConfirmacao(null)}
       >
-        <Pressable
-          style={styles.backdrop}
-          onPress={() => setPayloadPendente(null)}
-        >
+        <Pressable style={styles.backdrop} onPress={() => setConfirmacao(null)}>
           <Pressable style={styles.card} onPress={() => {}}>
             <Txt variant="subtitle">Parcelas anteriores ao mês atual</Txt>
             <Txt variant="muted">
@@ -276,6 +304,40 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
               <Button
                 title="Pagas"
                 onPress={() => confirmarParcelasAnteriores(true)}
+                style={styles.flex}
+              />
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <Modal
+        visible={confirmacao?.etapa === "vencimento-futuro"}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setConfirmacao(null)}
+      >
+        <Pressable style={styles.backdrop} onPress={() => setConfirmacao(null)}>
+          <Pressable style={styles.card} onPress={() => {}}>
+            <Txt variant="subtitle">
+              Atualizar vencimento das parcelas futuras?
+            </Txt>
+            <Txt variant="muted">
+              O dia de vencimento foi alterado. As parcelas de aluguel com
+              competência posterior ao mês atual terão a data de vencimento
+              alterada para o novo dia selecionado. Deseja confirmar essa
+              alteração?
+            </Txt>
+            <View style={styles.acoes}>
+              <Button
+                title="Não alterar"
+                variant="outline"
+                onPress={() => confirmarVencimentoFuturo(false)}
+                style={styles.flex}
+              />
+              <Button
+                title="Confirmar"
+                onPress={() => confirmarVencimentoFuturo(true)}
                 style={styles.flex}
               />
             </View>

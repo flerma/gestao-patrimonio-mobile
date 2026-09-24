@@ -227,6 +227,8 @@ export interface ContratoRequest {
   observacoes?: string | null;
   /** Só é considerado quando a data de início gera parcelas com competência anterior ao mês atual. */
   marcarParcelasAnterioresComoPagas?: boolean | null;
+  /** Só é considerado numa atualização quando o dia de vencimento muda. */
+  atualizarVencimentoParcelasFuturas?: boolean | null;
 }
 
 // ---------- Pagamento de aluguel ----------
