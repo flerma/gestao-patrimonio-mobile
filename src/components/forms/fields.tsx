@@ -63,11 +63,13 @@ export function TextField<T extends FieldValues>({
   autoCapitalize = "sentences",
   numeric,
   secureTextEntry,
+  disabled,
 }: BaseProps<T> & {
   keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
   autoCapitalize?: "none" | "sentences" | "words";
   numeric?: boolean;
   secureTextEntry?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <Controller
@@ -76,7 +78,11 @@ export function TextField<T extends FieldValues>({
       render={({ field, fieldState }) => (
         <Field label={label} error={fieldState.error?.message} hint={hint}>
           <TextInput
-            style={[styles.input, fieldState.error && styles.inputError]}
+            style={[
+              styles.input,
+              fieldState.error && styles.inputError,
+              disabled && styles.inputDisabled,
+            ]}
             value={field.value == null ? "" : String(field.value)}
             onChangeText={(text) => {
               if (numeric) {
@@ -92,6 +98,7 @@ export function TextField<T extends FieldValues>({
             keyboardType={numeric ? "numeric" : keyboardType}
             autoCapitalize={autoCapitalize}
             secureTextEntry={secureTextEntry}
+            editable={!disabled}
           />
         </Field>
       )}
@@ -292,6 +299,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   inputError: { borderColor: colors.danger },
+  inputDisabled: { backgroundColor: colors.background, opacity: 0.6 },
   textarea: { minHeight: 96, paddingTop: spacing.sm },
   error: { color: colors.danger },
   pickerWrap: { paddingHorizontal: 0, paddingVertical: 0, overflow: "hidden" },

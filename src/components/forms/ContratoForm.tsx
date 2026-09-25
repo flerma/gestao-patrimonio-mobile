@@ -123,6 +123,10 @@ const schema = z
   .refine((d) => d.dataPrimeiraParcela >= d.dataInicio, {
     path: ["dataPrimeiraParcela"],
     message: "A data da primeira parcela não pode ser anterior ao início da vigência",
+  })
+  .refine((d) => d.indiceReajuste !== "FIXO" || !!d.percentualReajuste, {
+    path: ["percentualReajuste"],
+    message: 'Informe o percentual de reajuste quando o índice for "Percentual fixo"',
   });
 type FormValues = z.infer<typeof schema>;
 
@@ -156,6 +160,7 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
 
   const dataInicio = watch("dataInicio");
   const diaVencimento = watch("diaVencimento");
+  const indiceReajuste = watch("indiceReajuste");
   const primeiraExecucaoSugestaoRef = React.useRef(true);
   React.useEffect(() => {
     if (primeiraExecucaoSugestaoRef.current) {
@@ -331,12 +336,14 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
           name="indiceReajuste"
           label="Índice de reajuste"
           options={enumOptions(INDICE_REAJUSTE, indiceReajusteLabels)}
+          onValueChange={() => setValue("percentualReajuste", undefined)}
         />
         <TextField
           control={control}
           name="percentualReajuste"
           label="Percentual de reajuste (%)"
           numeric
+          disabled={indiceReajuste !== "FIXO"}
         />
         <TextField
           control={control}
