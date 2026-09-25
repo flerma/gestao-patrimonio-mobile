@@ -16,34 +16,43 @@ function MoneyInput({
   onChange,
   onBlur,
   hasError,
+  disabled,
 }: {
   value: number | undefined;
   onChange: (value: number | undefined) => void;
   onBlur: () => void;
   hasError: boolean;
+  disabled?: boolean;
 }) {
   const [display, setDisplay] = React.useState(() => formatMoneyValue(value));
   const [ultimoValor, setUltimoValor] = React.useState(value);
 
   // Ressincroniza durante a renderização (sem efeito) quando o valor muda
   // por outro motivo que não a digitação aqui — ex.: reset do formulário ao
-  // carregar um registro para edição.
-  if (value !== ultimoValor && parseMoneyMask(display) !== value) {
+  // carregar um registro para edição, ou zeramento programático. `ultimoValor`
+  // precisa ser atualizado sempre que o valor externo mudar — mesmo quando o
+  // display já reflete esse valor (ex.: logo após a própria digitação) —
+  // senão uma mudança externa futura para esse mesmo valor "antigo" passa
+  // despercebida.
+  if (value !== ultimoValor) {
     setUltimoValor(value);
-    setDisplay(formatMoneyValue(value));
+    if (parseMoneyMask(display) !== value) {
+      setDisplay(formatMoneyValue(value));
+    }
   }
 
   return (
     <TextInput
       style={{
         minHeight: 46,
-        backgroundColor: colors.surface,
+        backgroundColor: disabled ? colors.background : colors.surface,
         borderWidth: 1,
         borderColor: hasError ? colors.danger : colors.border,
         borderRadius: radius.sm,
         paddingHorizontal: spacing.md,
         fontSize: 15,
         color: colors.text,
+        opacity: disabled ? 0.6 : 1,
       }}
       value={display}
       onChangeText={(text) => {
@@ -55,6 +64,7 @@ function MoneyInput({
       placeholder="0,00"
       placeholderTextColor={colors.textFaint}
       keyboardType="decimal-pad"
+      editable={!disabled}
     />
   );
 }
@@ -63,10 +73,12 @@ export function MoneyField<T extends FieldValues>({
   control,
   name,
   label,
+  disabled,
 }: {
   control: Control<T>;
   name: FieldPath<T>;
   label: string;
+  disabled?: boolean;
 }) {
   return (
     <Controller
@@ -79,6 +91,7 @@ export function MoneyField<T extends FieldValues>({
             onChange={field.onChange}
             onBlur={field.onBlur}
             hasError={Boolean(fieldState.error)}
+            disabled={disabled}
           />
         </Field>
       )}

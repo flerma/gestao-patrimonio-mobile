@@ -161,6 +161,7 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
   const dataInicio = watch("dataInicio");
   const diaVencimento = watch("diaVencimento");
   const indiceReajuste = watch("indiceReajuste");
+  const tipoGarantia = watch("tipoGarantia");
   const primeiraExecucaoSugestaoRef = React.useRef(true);
   React.useEffect(() => {
     if (primeiraExecucaoSugestaoRef.current) {
@@ -356,11 +357,13 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
           name="tipoGarantia"
           label="Tipo de garantia"
           options={enumOptions(TIPO_GARANTIA, tipoGarantiaLabels)}
+          onValueChange={() => setValue("valorGarantia", undefined)}
         />
         <MoneyField
           control={control}
           name="valorGarantia"
           label="Valor da garantia (R$)"
+          disabled={tipoGarantia !== "CAUCAO"}
         />
       </Card>
 
