@@ -67,9 +67,10 @@ function ultimoDiaDoMes(ano: number, mesUm: number): number {
  * Início 15/01, vencimento dia 10 -> base 14/02 -> parcela 10/03.
  */
 function sugerirDataPrimeiraParcela(
-  dataInicio: string,
-  diaVencimento: number,
+  dataInicio: string | undefined,
+  diaVencimento: number | undefined,
 ): string | undefined {
+  if (!dataInicio || !diaVencimento) return undefined;
   const match = dataInicio.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!match) return undefined;
   const [, anoStr, mesStr, diaStr] = match;
