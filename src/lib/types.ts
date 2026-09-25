@@ -146,6 +146,8 @@ export interface ImovelResponse {
   tipo: TipoImovel;
   status: StatusImovel;
   valorAquisicao: number;
+  /** Nula em imóveis cadastrados antes da introdução deste campo. */
+  dataAquisicao?: IsoDate | null;
   valorAtual: number;
   endereco: Endereco | null;
   dataCriacao: IsoDateTime;
@@ -157,6 +159,7 @@ export interface ImovelRequest {
   tipo: TipoImovel;
   status: StatusImovel;
   valorAquisicao: number;
+  dataAquisicao: IsoDate;
   valorAtual: number;
   endereco: Endereco;
 }

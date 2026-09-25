@@ -18,10 +18,19 @@ import { spacing } from "@/lib/theme";
 import { useSalvarImovel } from "@/hooks/use-imoveis";
 import { Button } from "@/components/ui/Button";
 import { Card, CardTitle } from "@/components/ui/Card";
-import { SelectField, TextField } from "./fields";
+import { DateField, SelectField, TextField } from "./fields";
 import { CepField } from "./CepField";
 import { CidadeField } from "./CidadeField";
 import { MoneyField } from "./MoneyField";
+
+/** Data de hoje no formato ISO ("yyyy-MM-dd"), no fuso horário local. */
+function hojeIso(): string {
+  const hoje = new Date();
+  const ano = hoje.getFullYear();
+  const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+  const dia = String(hoje.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
 
 const schema = z.object({
   nome: z.string().trim().min(1, "Informe o nome do imóvel"),
@@ -30,6 +39,10 @@ const schema = z.object({
   valorAquisicao: z
     .number({ invalid_type_error: "Informe o valor de aquisição" })
     .min(0, "Valor inválido"),
+  dataAquisicao: z
+    .string()
+    .min(1, "Informe a data de aquisição")
+    .refine((data) => data <= hojeIso(), "A data de aquisição não pode ser uma data futura"),
   valorAtual: z
     .number({ invalid_type_error: "Informe o valor atual" })
     .min(0, "Valor inválido"),
@@ -57,6 +70,7 @@ export function ImovelForm({ imovel }: { imovel?: ImovelResponse }) {
       tipo: imovel?.tipo ?? "APARTAMENTO",
       status: imovel?.status ?? "DISPONIVEL",
       valorAquisicao: imovel?.valorAquisicao,
+      dataAquisicao: imovel?.dataAquisicao ?? "",
       valorAtual: imovel?.valorAtual,
       endereco: {
         cep: imovel?.endereco?.cep ?? "",
@@ -119,6 +133,12 @@ export function ImovelForm({ imovel }: { imovel?: ImovelResponse }) {
           control={control}
           name="valorAquisicao"
           label="Valor de aquisição (R$)"
+        />
+        <DateField
+          control={control}
+          name="dataAquisicao"
+          label="Data de aquisição"
+          maximumDate={new Date()}
         />
         <MoneyField
           control={control}

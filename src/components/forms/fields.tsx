@@ -235,7 +235,8 @@ export function DateField<T extends FieldValues>({
   name,
   label,
   hint,
-}: BaseProps<T>) {
+  maximumDate,
+}: BaseProps<T> & { maximumDate?: Date }) {
   const [open, setOpen] = React.useState(false);
   return (
     <Controller
@@ -266,6 +267,7 @@ export function DateField<T extends FieldValues>({
                 value={current}
                 mode="date"
                 display={Platform.OS === "ios" ? "inline" : "default"}
+                maximumDate={maximumDate}
                 onValueChange={(_event, date) => {
                   setOpen(false);
                   if (date) {
