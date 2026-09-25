@@ -137,7 +137,7 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
       imovelId: contrato?.imovel?.id ?? "",
       inquilinoId: contrato?.inquilino?.id ?? "",
       tipo: contrato?.tipo ?? "RESIDENCIAL",
-      status: contrato?.status ?? "RASCUNHO",
+      status: contrato?.status ?? "ATIVO",
       dataInicio: contrato?.dataInicio ?? "",
       dataFim: contrato?.dataFim ?? undefined,
       valorAluguel: contrato?.valorAluguel,
