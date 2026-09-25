@@ -54,6 +54,42 @@ function competenciaAnteriorAoMesAtual(dataInicio: string): boolean {
   return ano < anoAtual || (ano === anoAtual && mes < mesAtual);
 }
 
+function ultimoDiaDoMes(ano: number, mesUm: number): number {
+  return new Date(ano, mesUm, 0).getDate();
+}
+
+/**
+ * Sugere a data da primeira parcela: soma-se 30 dias à data de início da
+ * vigência; a partir dessa data-base, a primeira parcela cai no próximo dia
+ * igual ao dia de vencimento (no mesmo mês da data-base, se esse dia ainda
+ * não tiver passado; no mês seguinte, caso contrário).
+ * Ex.: início 02/01, vencimento dia 10 -> base 01/02 -> parcela 10/02.
+ * Início 15/01, vencimento dia 10 -> base 14/02 -> parcela 10/03.
+ */
+function sugerirDataPrimeiraParcela(
+  dataInicio: string,
+  diaVencimento: number,
+): string | undefined {
+  const match = dataInicio.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return undefined;
+  const [, anoStr, mesStr, diaStr] = match;
+  const inicio = new Date(Number(anoStr), Number(mesStr) - 1, Number(diaStr));
+  const base = new Date(inicio);
+  base.setDate(base.getDate() + 30);
+
+  let anoAlvo = base.getFullYear();
+  let mesAlvo = base.getMonth() + 1;
+  if (base.getDate() > diaVencimento) {
+    mesAlvo += 1;
+    if (mesAlvo > 12) {
+      mesAlvo = 1;
+      anoAlvo += 1;
+    }
+  }
+  const dia = Math.min(diaVencimento, ultimoDiaDoMes(anoAlvo, mesAlvo));
+  return `${anoAlvo}-${String(mesAlvo).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+}
+
 const schema = z
   .object({
     imovelId: z.string().min(1, "Selecione o imóvel"),
@@ -70,6 +106,7 @@ const schema = z
       .int()
       .min(1, "Entre 1 e 31")
       .max(31, "Entre 1 e 31"),
+    dataPrimeiraParcela: z.string().min(1, "Informe a data da primeira parcela"),
     indiceReajuste: z.enum(INDICE_REAJUSTE),
     percentualReajuste: z.number().min(0).optional(),
     periodoReajuste: z.number().int().positive().optional(),
@@ -80,6 +117,10 @@ const schema = z
   .refine((d) => !d.dataFim || d.dataFim >= d.dataInicio, {
     path: ["dataFim"],
     message: "A data fim deve ser posterior ao início",
+  })
+  .refine((d) => d.dataPrimeiraParcela >= d.dataInicio, {
+    path: ["dataPrimeiraParcela"],
+    message: "A data da primeira parcela não pode ser anterior ao início da vigência",
   });
 type FormValues = z.infer<typeof schema>;
 
@@ -89,7 +130,7 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
   const { data: imoveis } = useImoveis();
   const { data: inquilinos } = useInquilinos();
 
-  const { control, handleSubmit } = useForm<FormValues>({
+  const { control, handleSubmit, watch, setValue, formState } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       imovelId: contrato?.imovel?.id ?? "",
@@ -100,6 +141,7 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
       dataFim: contrato?.dataFim ?? undefined,
       valorAluguel: contrato?.valorAluguel,
       diaVencimento: contrato?.diaVencimento ?? 5,
+      dataPrimeiraParcela: contrato?.dataPrimeiraParcela ?? "",
       indiceReajuste: contrato?.indiceReajuste ?? "IPCA",
       percentualReajuste: contrato?.percentualReajuste ?? undefined,
       periodoReajuste: contrato?.periodoReajuste ?? 12,
@@ -108,6 +150,24 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
       observacoes: contrato?.observacoes ?? "",
     },
   });
+
+  const dataInicio = watch("dataInicio");
+  const diaVencimento = watch("diaVencimento");
+  const primeiraExecucaoSugestaoRef = React.useRef(true);
+  React.useEffect(() => {
+    if (primeiraExecucaoSugestaoRef.current) {
+      // Não sobrescreve o valor carregado (edição) nem o campo vazio
+      // (criação) já na montagem — só reage a mudanças feitas pelo usuário.
+      primeiraExecucaoSugestaoRef.current = false;
+      return;
+    }
+    if (formState.dirtyFields.dataPrimeiraParcela) return;
+    const sugestao = sugerirDataPrimeiraParcela(dataInicio, diaVencimento);
+    if (sugestao) {
+      setValue("dataPrimeiraParcela", sugestao);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dataInicio, diaVencimento]);
 
   type EtapaConfirmacao = "parcelas-anteriores" | "vencimento-futuro";
   const [confirmacao, setConfirmacao] = React.useState<{
@@ -130,6 +190,7 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
       dataFim: values.dataFim || undefined,
       valorAluguel: values.valorAluguel,
       diaVencimento: values.diaVencimento,
+      dataPrimeiraParcela: values.dataPrimeiraParcela,
       indiceReajuste: values.indiceReajuste,
       percentualReajuste: values.percentualReajuste,
       periodoReajuste: values.periodoReajuste,
@@ -230,6 +291,11 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
           name="diaVencimento"
           label="Dia de vencimento"
           options={DIAS_VENCIMENTO}
+        />
+        <DateField
+          control={control}
+          name="dataPrimeiraParcela"
+          label="Data da primeira parcela"
         />
       </Card>
 

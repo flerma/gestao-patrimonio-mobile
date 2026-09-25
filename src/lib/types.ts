@@ -200,6 +200,7 @@ export interface ContratoResponse {
   dataFim?: IsoDate | null;
   valorAluguel: number;
   diaVencimento: number;
+  dataPrimeiraParcela: IsoDate;
   indiceReajuste?: IndiceReajuste | null;
   percentualReajuste?: number | null;
   periodoReajuste?: number | null;
@@ -219,6 +220,8 @@ export interface ContratoRequest {
   dataFim?: IsoDate | null;
   valorAluguel: number;
   diaVencimento: number;
+  /** Data de vencimento da primeira parcela. Quando omitida, o backend calcula automaticamente. */
+  dataPrimeiraParcela?: IsoDate | null;
   indiceReajuste?: IndiceReajuste | null;
   percentualReajuste?: number | null;
   periodoReajuste?: number | null;
