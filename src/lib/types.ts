@@ -152,6 +152,8 @@ export interface ImovelResponse {
   endereco: Endereco | null;
   dataCriacao: IsoDateTime;
   dataAtualizacao: IsoDateTime;
+  /** Soma do valor pago em todas as parcelas de aluguel de todos os contratos do imóvel. Nula quando não calculada (ex.: listagem). */
+  totalAlugueisPagos?: number | null;
 }
 
 export interface ImovelRequest {
