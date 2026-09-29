@@ -403,7 +403,7 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
           name="tipoGarantia"
           label="Tipo de garantia"
           options={enumOptions(TIPO_GARANTIA, tipoGarantiaLabels)}
-          onValueChange={() => setValue("valorGarantia", undefined)}
+          onValueChange={() => setValue("valorGarantia", 0)}
         />
         <MoneyField
           control={control}
