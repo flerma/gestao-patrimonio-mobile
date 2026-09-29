@@ -98,6 +98,18 @@ function sugerirDataPrimeiraParcela(
   return `${anoAlvo}-${String(mesAlvo).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
 }
 
+/** Primeira parcela deve vencer, no mínimo, 30 dias após o início da vigência. */
+const DIAS_MINIMOS_PRIMEIRA_PARCELA = 30;
+
+/** Soma dias a uma data yyyy-MM-dd, retornando yyyy-MM-dd (ou undefined se inválida). */
+function somarDiasIso(data: string, dias: number): string | undefined {
+  const match = data.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return undefined;
+  const [, anoStr, mesStr, diaStr] = match;
+  const d = new Date(Number(anoStr), Number(mesStr) - 1, Number(diaStr) + dias);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 const schema = z
   .object({
     imovelId: z.string().min(1, "Selecione o imóvel"),
@@ -127,10 +139,16 @@ const schema = z
     path: ["dataFim"],
     message: "A data fim deve ser posterior ao início",
   })
-  .refine((d) => d.dataPrimeiraParcela >= d.dataInicio, {
-    path: ["dataPrimeiraParcela"],
-    message: "A data da primeira parcela não pode ser anterior ao início da vigência",
-  })
+  .refine(
+    (d) => {
+      const minima = somarDiasIso(d.dataInicio, DIAS_MINIMOS_PRIMEIRA_PARCELA);
+      return !minima || d.dataPrimeiraParcela >= minima;
+    },
+    {
+      path: ["dataPrimeiraParcela"],
+      message: `A data da primeira parcela deve ser, no mínimo, ${DIAS_MINIMOS_PRIMEIRA_PARCELA} dias após o início da vigência`,
+    },
+  )
   .refine((d) => d.indiceReajuste !== "FIXO" || !!d.percentualReajuste, {
     path: ["percentualReajuste"],
     message: 'Informe o percentual de reajuste quando o índice for "Percentual fixo"',
@@ -170,18 +188,19 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
   const diaVencimento = watch("diaVencimento");
   const indiceReajuste = watch("indiceReajuste");
   const tipoGarantia = watch("tipoGarantia");
-  const primeiraExecucaoSugestaoRef = React.useRef(true);
+  // Recalcula a data da primeira parcela sempre que o início da vigência ou
+  // o dia de vencimento mudam (criação e edição) — inclusive se o usuário já
+  // tiver alterado a data manualmente. Compara com os valores anteriores em vez
+  // de pular a "primeira execução", para não sobrescrever o valor carregado na
+  // montagem (nem sob a dupla execução de efeitos do StrictMode).
+  const anterioresSugestaoRef = React.useRef({ dataInicio, diaVencimento });
   React.useEffect(() => {
-    if (primeiraExecucaoSugestaoRef.current) {
-      // Não sobrescreve o valor carregado (edição) nem o campo vazio
-      // (criação) já na montagem — só reage a mudanças feitas pelo usuário.
-      primeiraExecucaoSugestaoRef.current = false;
-      return;
-    }
-    if (formState.dirtyFields.dataPrimeiraParcela) return;
+    const anteriores = anterioresSugestaoRef.current;
+    anterioresSugestaoRef.current = { dataInicio, diaVencimento };
+    if (anteriores.dataInicio === dataInicio && anteriores.diaVencimento === diaVencimento) return;
     const sugestao = sugerirDataPrimeiraParcela(dataInicio, diaVencimento);
     if (sugestao) {
-      setValue("dataPrimeiraParcela", sugestao);
+      setValue("dataPrimeiraParcela", sugestao, { shouldValidate: formState.isSubmitted });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataInicio, diaVencimento]);
