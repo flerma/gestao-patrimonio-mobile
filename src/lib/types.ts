@@ -240,6 +240,12 @@ export interface ContratoRequest {
   marcarParcelasAnterioresComoPagas?: boolean | null;
   /** Só é considerado numa atualização quando o dia de vencimento muda. */
   atualizarVencimentoParcelasFuturas?: boolean | null;
+  /**
+   * Só é considerado numa atualização quando o valor do aluguel muda: true
+   * atualiza o valor de todas as parcelas (inclusive anteriores ao mês
+   * atual); false atualiza somente as parcelas do mês atual em diante.
+   */
+  atualizarValorParcelas?: boolean | null;
 }
 
 // ---------- Pagamento de aluguel ----------

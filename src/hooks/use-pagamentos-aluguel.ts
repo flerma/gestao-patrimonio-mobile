@@ -19,10 +19,11 @@ export const pagamentosAluguelKeys = {
   detail: (id: UUID) => ["pagamentos-aluguel", id] as const,
 };
 
-export function usePagamentosAluguel(contratoId?: UUID) {
+export function usePagamentosAluguel(contratoId?: UUID, enabled = true) {
   return useQuery({
     queryKey: pagamentosAluguelKeys.list(contratoId),
     queryFn: () => pagamentosAluguelApi.listar(contratoId),
+    enabled,
   });
 }
 
