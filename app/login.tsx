@@ -13,6 +13,8 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Txt } from "@/components/ui/Txt";
 import { TextField } from "@/components/forms/fields";
+import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
+import { googleSigninDisponivel, obterIdTokenGoogle } from "@/lib/google-signin";
 
 const schema = z.object({
   usuario: z
@@ -26,8 +28,9 @@ type FormValues = z.infer<typeof schema>;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, loginGoogle } = useAuth();
   const [enviando, setEnviando] = React.useState(false);
+  const [entrandoGoogle, setEntrandoGoogle] = React.useState(false);
   const [erro, setErro] = React.useState<string | null>(null);
 
   const { control, handleSubmit } = useForm<FormValues>({
@@ -51,6 +54,23 @@ export default function LoginScreen() {
       );
     } finally {
       setEnviando(false);
+    }
+  };
+
+  const entrarComGoogle = async () => {
+    setErro(null);
+    setEntrandoGoogle(true);
+    try {
+      const idToken = await obterIdTokenGoogle();
+      if (idToken) await loginGoogle(idToken); // null = usuário cancelou
+    } catch (e) {
+      setErro(
+        e instanceof Error && e.message
+          ? e.message
+          : "Não foi possível entrar com o Google.",
+      );
+    } finally {
+      setEntrandoGoogle(false);
     }
   };
 
@@ -94,6 +114,16 @@ export default function LoginScreen() {
           variant="outline"
           onPress={() => router.push("/cadastro")}
         />
+        {googleSigninDisponivel ? (
+          <>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+              <Txt variant="muted">ou</Txt>
+              <View style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
+            </View>
+            <GoogleLoginButton onPress={entrarComGoogle} loading={entrandoGoogle} />
+          </>
+        ) : null}
       </View>
     </Screen>
   );

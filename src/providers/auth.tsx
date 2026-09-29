@@ -1,6 +1,11 @@
 import * as React from "react";
 
-import { authApi, type RegistrarRequest, type UsuarioAutenticado } from "@/lib/api/auth";
+import {
+  authApi,
+  type LoginResponse,
+  type RegistrarRequest,
+  type UsuarioAutenticado,
+} from "@/lib/api/auth";
 import {
   clearSession,
   getRefreshToken,
@@ -9,11 +14,13 @@ import {
   saveSession,
   type UsuarioSessao,
 } from "@/lib/auth/token-storage";
+import { sairDoGoogle } from "@/lib/google-signin";
 
 interface AuthContextValue {
   usuario: UsuarioSessao | null;
   carregando: boolean;
   login: (usuario: string, senha: string) => Promise<void>;
+  loginGoogle: (idToken: string) => Promise<void>;
   registrar: (dados: RegistrarRequest) => Promise<UsuarioAutenticado>;
   logout: () => Promise<void>;
 }
@@ -67,17 +74,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // aqui só precisamos refletir isso no estado em memória.
   React.useEffect(() => onSessionExpired(() => setUsuario(null)), []);
 
+  const iniciarSessao = React.useCallback(async (resposta: LoginResponse) => {
+    await saveSession({
+      accessToken: resposta.accessToken,
+      refreshToken: resposta.refreshToken,
+      usuario: paraUsuarioSessao(resposta.usuario),
+    });
+    setUsuario(paraUsuarioSessao(resposta.usuario));
+  }, []);
+
   const login = React.useCallback(
     async (usuarioLogin: string, senha: string) => {
-      const resposta = await authApi.login({ usuario: usuarioLogin, senha });
-      await saveSession({
-        accessToken: resposta.accessToken,
-        refreshToken: resposta.refreshToken,
-        usuario: paraUsuarioSessao(resposta.usuario),
-      });
-      setUsuario(paraUsuarioSessao(resposta.usuario));
+      await iniciarSessao(await authApi.login({ usuario: usuarioLogin, senha }));
     },
-    [],
+    [iniciarSessao],
+  );
+
+  const loginGoogle = React.useCallback(
+    async (idToken: string) => {
+      await iniciarSessao(await authApi.loginGoogle(idToken));
+    },
+    [iniciarSessao],
   );
 
   const registrar = React.useCallback(
@@ -95,12 +112,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     await clearSession();
+    await sairDoGoogle();
     setUsuario(null);
   }, []);
 
   const value = React.useMemo<AuthContextValue>(
-    () => ({ usuario, carregando, login, registrar, logout }),
-    [usuario, carregando, login, registrar, logout],
+    () => ({ usuario, carregando, login, loginGoogle, registrar, logout }),
+    [usuario, carregando, login, loginGoogle, registrar, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

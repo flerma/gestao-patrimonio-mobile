@@ -53,6 +53,9 @@ export interface RegistrarRequest {
 export const authApi = {
   login: (body: LoginRequest) =>
     apiFetch<LoginResponse>(`${BASE}/login`, { method: "POST", body }),
+  /** Login (e cadastro no primeiro acesso) com o ID token do Google. */
+  loginGoogle: (idToken: string) =>
+    apiFetch<LoginResponse>(`${BASE}/google`, { method: "POST", body: { idToken } }),
   registrar: (body: RegistrarRequest) =>
     apiFetch<UsuarioAutenticado>(`${BASE}/registrar`, {
       method: "POST",
