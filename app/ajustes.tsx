@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import {
   DEFAULT_API_BASE_URL,
   getApiBaseUrl,
+  IS_PRODUCTION,
   onApiBaseUrlChange,
   resetApiBaseUrl,
   setApiBaseUrl,
@@ -105,6 +106,8 @@ export default function AjustesScreen() {
 
   return (
     <Screen>
+      {/* Troca de servidor é ferramenta de desenvolvimento: oculta no app da loja. */}
+      {IS_PRODUCTION ? null : (
       <Card>
         <CardTitle>Servidor da API</CardTitle>
         <Txt variant="muted">
@@ -134,8 +137,9 @@ export default function AjustesScreen() {
           }}
         />
       </Card>
+      )}
 
-      <View style={{ marginTop: spacing.lg }}>
+      <View style={{ marginTop: IS_PRODUCTION ? 0 : spacing.lg }}>
         <Card>
           <CardTitle>Notificações</CardTitle>
           <Txt variant="muted">

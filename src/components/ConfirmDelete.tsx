@@ -10,6 +10,7 @@ export function ConfirmDelete({
   visible,
   itemLabel,
   blockedReason,
+  warning,
   deleting,
   onCancel,
   onConfirm,
@@ -17,6 +18,8 @@ export function ConfirmDelete({
   visible: boolean;
   itemLabel: string;
   blockedReason?: string | null;
+  /** Aviso extra exibido na confirmação (ex.: exclusão em cascata). */
+  warning?: string | null;
   deleting?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
@@ -44,8 +47,15 @@ export function ConfirmDelete({
           <Txt variant="muted">
             {blocked
               ? blockedReason
-              : `Tem certeza de que deseja excluir “${itemLabel}”? Esta ação não pode ser desfeita.`}
+              : warning
+                ? `Tem certeza de que deseja excluir “${itemLabel}”?`
+                : `Tem certeza de que deseja excluir “${itemLabel}”? Esta ação não pode ser desfeita.`}
           </Txt>
+          {!blocked && warning ? (
+            <Txt variant="muted" style={{ color: colors.danger }}>
+              {warning}
+            </Txt>
+          ) : null}
           <View style={styles.actions}>
             {blocked ? (
               <Button title="Entendi" onPress={onCancel} />

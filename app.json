@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Patrimônio Imobiliário",
+    "name": "Gestão Seu Patrimônio",
     "slug": "gestao-patrimonio-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -39,7 +39,12 @@
       "expo-secure-store"
     ],
     "extra": {
-      "apiBaseUrl": "http://10.0.2.2:8080"
-    }
+      "apiBaseUrl": "http://10.0.2.2:8080",
+      "router": {},
+      "eas": {
+        "projectId": "35312c0c-3833-4d2c-a76c-82fea69f580d"
+      }
+    },
+    "owner": "flerma"
   }
 }

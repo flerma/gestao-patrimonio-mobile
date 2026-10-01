@@ -33,11 +33,14 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "cross-env": "^10.1.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
+    "start:prod": "cross-env APP_ENV=production EXPO_PUBLIC_API_BASE_URL=https://api.gestaoseupatrimonio.com.br expo start",
     "android": "expo start --android",
+    "android:prod": "cross-env APP_ENV=production EXPO_PUBLIC_API_BASE_URL=https://api.gestaoseupatrimonio.com.br expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"
   },

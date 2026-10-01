@@ -7,7 +7,16 @@
 // estiver definido. No Android não há plugin a aplicar: basta o módulo nativo
 // (autolinking) + o client "Android" cadastrado no Google Cloud com o pacote
 // e o SHA-1 do certificado de assinatura.
-module.exports = ({ config }) => {
+//
+// Ambiente: APP_ENV ("development" | "production") vem do perfil do eas.json
+// (builds) ou dos scripts `start` / `start:prod` (package.json) e fica em
+// `extra.appEnv` — lido por src/lib/config.ts.
+module.exports = ({ config: base }) => {
+  const config = {
+    ...base,
+    extra: { ...base.extra, appEnv: process.env.APP_ENV || "development" },
+  };
+
   const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
   if (!iosClientId) return config;
 

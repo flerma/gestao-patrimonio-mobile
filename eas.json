@@ -1,0 +1,35 @@
+{
+  "cli": {
+    "version": ">= 24.8.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "development",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "435511220295-5ku76179fqc3j90id3h27k5sptjhd69n.apps.googleusercontent.com"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.gestaoseupatrimonio.com.br",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "435511220295-5ku76179fqc3j90id3h27k5sptjhd69n.apps.googleusercontent.com"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_API_BASE_URL": "https://api.gestaoseupatrimonio.com.br",
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "435511220295-5ku76179fqc3j90id3h27k5sptjhd69n.apps.googleusercontent.com"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
