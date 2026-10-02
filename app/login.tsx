@@ -1,5 +1,5 @@
 import * as React from "react";
-import { View } from "react-native";
+import { Image, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -78,6 +78,11 @@ export default function LoginScreen() {
     <Screen>
       <View style={{ gap: spacing.lg, marginTop: spacing.xxl }}>
         <View style={{ alignItems: "center", gap: spacing.xs }}>
+          <Image
+            source={require("../assets/logo.png")}
+            style={{ width: 96, height: 96, marginBottom: spacing.sm }}
+            accessibilityLabel="Logo Gestão de Patrimônio"
+          />
           <Txt variant="title">Gestão de Patrimônio</Txt>
           <Txt variant="muted">Entre com seu e-mail e senha</Txt>
         </View>

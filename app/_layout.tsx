@@ -1,6 +1,6 @@
 import "react-native-gesture-handler";
 import * as React from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, Image, View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
@@ -31,7 +31,18 @@ function RootNavigator() {
           backgroundColor: colors.background,
         }}
       >
-        <ActivityIndicator color={colors.primary} size="large" />
+        {/* Mesmo logo, tamanho e fundo da splash nativa (expo-splash-screen no
+            app.json), para a transição splash -> carregamento ser contínua. */}
+        <Image
+          source={require("../assets/logo.png")}
+          style={{ width: 180, height: 180 }}
+          accessibilityLabel="Logo Gestão de Patrimônio"
+        />
+        <ActivityIndicator
+          color={colors.primary}
+          size="large"
+          style={{ marginTop: 32 }}
+        />
       </View>
     );
   }

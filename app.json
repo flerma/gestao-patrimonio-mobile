@@ -36,7 +36,16 @@
           "defaultChannel": "alertas"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/logo.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#F7F9FC"
+        }
+      ]
     ],
     "extra": {
       "apiBaseUrl": "http://10.0.2.2:8080",
