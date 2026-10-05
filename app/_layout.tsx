@@ -97,6 +97,8 @@ function RootNavigator() {
       <Stack.Protected guard={!usuario}>
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="cadastro" options={{ headerShown: false }} />
+        <Stack.Screen name="esqueci-senha" options={{ title: "", headerTransparent: true }} />
+        <Stack.Screen name="redefinir-senha" options={{ title: "", headerTransparent: true }} />
       </Stack.Protected>
     </Stack>
   );

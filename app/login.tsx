@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Image, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -102,6 +102,15 @@ export default function LoginScreen() {
             autoCapitalize="none"
             secureTextEntry
           />
+          <Pressable
+            onPress={() => router.push("/esqueci-senha")}
+            accessibilityRole="link"
+            style={{ alignSelf: "flex-end" }}
+          >
+            <Txt style={{ color: colors.primary, fontWeight: "600" }}>
+              Esqueceu a sua senha?
+            </Txt>
+          </Pressable>
           {erro ? (
             <Txt variant="muted" style={{ color: colors.danger }}>
               {erro}
