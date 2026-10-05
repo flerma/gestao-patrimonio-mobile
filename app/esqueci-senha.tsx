@@ -24,7 +24,7 @@ export default function EsqueciSenhaScreen() {
   const [enviando, setEnviando] = React.useState(false);
   const [erro, setErro] = React.useState<string | null>(null);
 
-  const { control, handleSubmit } = useForm<FormValues>({
+  const { control, handleSubmit, setError } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: "" },
   });
@@ -36,7 +36,12 @@ export default function EsqueciSenhaScreen() {
       await authApi.esqueciSenha(email.trim());
       router.push({ pathname: "/redefinir-senha", params: { email: email.trim() } });
     } catch (e) {
-      setErro(e instanceof ApiError ? e.message : "Não foi possível enviar o código.");
+      const body = e instanceof ApiError ? (e.body as { campo?: string; message?: string } | null) : null;
+      if (body?.campo === "email") {
+        setError("email", { message: body.message ?? "E-mail não cadastrado." });
+      } else {
+        setErro(e instanceof ApiError ? e.message : "Não foi possível enviar o código.");
+      }
     } finally {
       setEnviando(false);
     }
