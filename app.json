@@ -2,7 +2,7 @@
   "expo": {
     "name": "Gestão Seu Patrimônio",
     "slug": "gestao-patrimonio-mobile",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "gpimobile",
@@ -32,7 +32,7 @@
       [
         "expo-notifications",
         {
-          "color": "#3B82F6",
+          "color": "#003C85",
           "defaultChannel": "alertas"
         }
       ],
@@ -43,7 +43,7 @@
           "image": "./assets/logo.png",
           "imageWidth": 180,
           "resizeMode": "contain",
-          "backgroundColor": "#F7F9FC"
+          "backgroundColor": "#F5F7FA"
         }
       ]
     ],

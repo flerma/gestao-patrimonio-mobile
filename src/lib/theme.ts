@@ -1,30 +1,35 @@
-// Paleta "Azul sereno": fundo off-white, superfícies brancas, azul calmo.
+// Paleta da marca (logo icon.png): azul-marinho, dourado e branco. Espelha
+// gestao-patrimonio-frontend/src/app/globals.css — altere os dois juntos.
 export const colors = {
-  background: "#F7F9FC",
+  background: "#F5F7FA",
   surface: "#ffffff",
-  surfaceMuted: "#F1F5FB",
-  border: "#E9EEF5",
-  text: "#1F2733",
-  textMuted: "#6A7686",
-  textFaint: "#9AA6B4",
+  surfaceMuted: "#EEF2F7",
+  border: "#DFE5EE",
+  text: "#0C1A33",
+  textMuted: "#62708A",
+  textFaint: "#97A3B6",
 
-  primary: "#3B82F6",
-  primarySoft: "#E8F1FE",
-  primaryText: "#1D4ED8",
+  primary: "#003C85",
+  primarySoft: "#E6EEF8",
+  primaryText: "#003C85",
 
-  success: "#1FA463",
-  successSoft: "#E4F5EC",
-  warning: "#E0A100",
-  warningSoft: "#FBF1DA",
-  danger: "#E5484D",
-  dangerSoft: "#FCE9EA",
+  gold: "#F0B424",
+  goldSoft: "#FDF3D7",
+  goldText: "#8A5F00",
 
-  sidebar: "#ffffff",
-  sidebarText: "#1F2733",
+  success: "#188A4F",
+  successSoft: "#E3F4EA",
+  warning: "#E07B09",
+  warningSoft: "#FDEEDC",
+  danger: "#D9363C",
+  dangerSoft: "#FBE7E8",
 
-  chart1: "#3B82F6",
-  chart2: "#1FA463",
-  chart3: "#E0A100",
+  sidebar: "#001A4D",
+  sidebarText: "#ffffff",
+
+  chart1: "#003C99",
+  chart2: "#F0B424",
+  chart3: "#188A4F",
 };
 
 export const spacing = {
