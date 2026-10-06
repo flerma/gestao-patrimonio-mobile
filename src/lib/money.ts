@@ -1,13 +1,21 @@
 /**
  * Máscara de dinheiro (R$): separador de milhar "." e separador de centavos
  * ",". Só aceita dígitos e, no máximo, um separador decimal (tudo mais é
- * descartado ao digitar). O teclado numérico decimal do celular emite "."
- * em vez de "," dependendo do idioma do aparelho, então aqui (diferente do
- * campo web, que bloqueia ponto por ter teclado completo) um ponto digitado
- * é tratado como vírgula.
+ * descartado ao digitar).
+ *
+ * O teclado numérico decimal do celular emite "." em vez de "," dependendo do
+ * idioma do aparelho, então um ponto RECÉM-DIGITADO no fim (texto anterior +
+ * ".") é tratado como vírgula. Os demais pontos são os separadores de milhar
+ * que a própria máscara inseriu e são descartados — tratá-los como vírgula
+ * fazia "2.500" + "0" virar "2,50" e travar o campo.
+ *
+ * @param anterior texto exibido antes desta digitação (para reconhecer o ponto digitado).
  */
-export function maskMoney(raw: string): string {
-  let cleaned = raw.replace(/[^\d,.]/g, "").replace(/\./g, ",");
+export function maskMoney(raw: string, anterior = ""): string {
+  let cleaned = raw.replace(/[^\d,.]/g, "");
+  const pontoDigitadoAgora =
+    cleaned.endsWith(".") && !cleaned.includes(",") && raw.length === anterior.length + 1;
+  cleaned = cleaned.replace(/\./g, "") + (pontoDigitadoAgora ? "," : "");
 
   const primeiraVirgula = cleaned.indexOf(",");
   if (primeiraVirgula !== -1) {

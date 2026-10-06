@@ -56,7 +56,7 @@ function MoneyInput({
       }}
       value={display}
       onChangeText={(text) => {
-        const masked = maskMoney(text);
+        const masked = maskMoney(text, display);
         setDisplay(masked);
         onChange(parseMoneyMask(masked));
       }}
