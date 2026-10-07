@@ -18,8 +18,8 @@ function MoneyInput({
   hasError,
   disabled,
 }: {
-  value: number | undefined;
-  onChange: (value: number | undefined) => void;
+  value: number | null | undefined;
+  onChange: (value: number | null) => void;
   onBlur: () => void;
   hasError: boolean;
   disabled?: boolean;
@@ -58,7 +58,10 @@ function MoneyInput({
       onChangeText={(text) => {
         const masked = maskMoney(text, display);
         setDisplay(masked);
-        onChange(parseMoneyMask(masked));
+        // Campo apagado = null (não undefined): com undefined o react-hook-form
+        // volta a exibir o valor com que o formulário foi aberto (ex.: o 7.000
+        // carregado na edição) e o último dígito "reaparecia" ao apagar.
+        onChange(parseMoneyMask(masked) ?? null);
       }}
       onBlur={onBlur}
       placeholder="0,00"

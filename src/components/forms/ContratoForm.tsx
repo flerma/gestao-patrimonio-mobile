@@ -127,12 +127,13 @@ const schema = z
       .min(1, "Entre 1 e 31")
       .max(31, "Entre 1 e 31"),
     dataPrimeiraParcela: z.string().min(1, "Informe a data da primeira parcela"),
-    valorPrimeiraParcela: z.number().positive("O valor deve ser maior que zero").optional(),
+    // nullish: o MoneyField grava null quando o campo é apagado (ver MoneyField).
+    valorPrimeiraParcela: z.number().positive("O valor deve ser maior que zero").nullish(),
     indiceReajuste: z.enum(INDICE_REAJUSTE),
     percentualReajuste: z.number().min(0).optional(),
     periodoReajuste: z.number().int().positive().optional(),
     tipoGarantia: z.enum(TIPO_GARANTIA),
-    valorGarantia: z.number().min(0).optional(),
+    valorGarantia: z.number().min(0).nullish(),
     observacoes: z.string().max(1000).optional(),
   })
   .refine((d) => !d.dataFim || d.dataFim >= d.dataInicio, {
@@ -218,7 +219,7 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
     // e valor da primeira parcela são campos independentes.
     if (contrato) return;
     if (formState.dirtyFields.valorPrimeiraParcela) return;
-    if (valorAluguel !== undefined) {
+    if (valorAluguel != null) {
       setValue("valorPrimeiraParcela", valorAluguel);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -255,12 +256,12 @@ export function ContratoForm({ contrato }: { contrato?: ContratoResponse }) {
       valorAluguel: values.valorAluguel,
       diaVencimento: values.diaVencimento,
       dataPrimeiraParcela: values.dataPrimeiraParcela,
-      valorPrimeiraParcela: values.valorPrimeiraParcela,
+      valorPrimeiraParcela: values.valorPrimeiraParcela ?? undefined,
       indiceReajuste: values.indiceReajuste,
       percentualReajuste: values.percentualReajuste,
       periodoReajuste: values.periodoReajuste,
       tipoGarantia: values.tipoGarantia,
-      valorGarantia: values.valorGarantia,
+      valorGarantia: values.valorGarantia ?? undefined,
       observacoes: values.observacoes || undefined,
     };
 
