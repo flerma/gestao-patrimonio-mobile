@@ -1,5 +1,5 @@
 import * as React from "react";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 
 import { useContrato, useExcluirContrato } from "@/hooks/use-contratos";
@@ -79,20 +79,35 @@ export default function ContratoDetalheScreen() {
           </View>
 
           <Card style={{ marginBottom: spacing.lg }}>
+            {/* "Atrasados" é só uma contagem: coluna estreita, sobrando largura
+                para os valores em R$. Valores numa linha só, com fonte menor e
+                reduzida automaticamente se ainda não couberem. */}
             <View style={{ flexDirection: "row", gap: spacing.md }}>
-              <View style={{ flex: 1 }}>
-                <Txt variant="muted">Atrasados</Txt>
-                <Txt variant="value">{resumo.emAtraso}</Txt>
+              <View style={{ flex: 0.6 }}>
+                <Txt variant="muted" numberOfLines={1}>Atrasados</Txt>
+                <Txt variant="value" style={styles.valorResumo}>{resumo.emAtraso}</Txt>
               </View>
-              <View style={{ flex: 1 }}>
-                <Txt variant="muted">Em aberto</Txt>
-                <Txt variant="value" style={{ color: colors.danger }}>
+              <View style={{ flex: 1.2 }}>
+                <Txt variant="muted" numberOfLines={1}>Em aberto</Txt>
+                <Txt
+                  variant="value"
+                  style={[styles.valorResumo, { color: colors.danger }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.6}
+                >
                   {formatCurrency(resumo.totalEmAtraso)}
                 </Txt>
               </View>
-              <View style={{ flex: 1 }}>
-                <Txt variant="muted">Recebidos</Txt>
-                <Txt variant="value" style={{ color: colors.success }}>
+              <View style={{ flex: 1.2 }}>
+                <Txt variant="muted" numberOfLines={1}>Recebidos</Txt>
+                <Txt
+                  variant="value"
+                  style={[styles.valorResumo, { color: colors.success }]}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.6}
+                >
                   {formatCurrency(resumo.totalRecebido)}
                 </Txt>
               </View>
@@ -118,3 +133,8 @@ export default function ContratoDetalheScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  // Menor que o variant "value" (20): R$ com milhares cabe numa linha.
+  valorResumo: { fontSize: 16 },
+});
