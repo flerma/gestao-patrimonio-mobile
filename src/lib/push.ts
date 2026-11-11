@@ -115,3 +115,26 @@ export async function registrarParaPush(
     return { ok: false, motivo: "erro" };
   }
 }
+
+/**
+ * Chama `aoTocar(href)` quando o usuário toca numa notificação que traga
+ * `data.href` (ex.: push de reajuste → "/contratos/{id}"), inclusive a que
+ * abriu o app. Retorna a função de cancelamento. No-op no Expo Go.
+ */
+export function ouvirToqueEmNotificacao(
+  aoTocar: (href: string, notificacaoId: string) => void,
+): () => void {
+  const N = getNotifications();
+  if (!N) return () => {};
+  const tratar = (
+    resposta: { notification: { request: { identifier: string; content: { data?: unknown } } } } | null,
+  ) => {
+    const data = resposta?.notification.request.content.data as { href?: unknown } | undefined;
+    if (typeof data?.href === "string" && data.href.startsWith("/")) {
+      aoTocar(data.href, resposta!.notification.request.identifier);
+    }
+  };
+  N.getLastNotificationResponseAsync().then(tratar).catch(() => {});
+  const assinatura = N.addNotificationResponseReceivedListener(tratar);
+  return () => assinatura.remove();
+}

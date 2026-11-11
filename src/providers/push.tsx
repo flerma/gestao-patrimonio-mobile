@@ -1,8 +1,14 @@
 import * as React from "react";
 import { Platform } from "react-native";
+import { useRouter, type Href } from "expo-router";
 
 import { notificacoesApi } from "@/lib/api/notificacoes";
-import { isExpoGo, registrarParaPush, statusPermissao } from "@/lib/push";
+import {
+  isExpoGo,
+  ouvirToqueEmNotificacao,
+  registrarParaPush,
+  statusPermissao,
+} from "@/lib/push";
 import { useAuth } from "./auth";
 
 /**
@@ -44,6 +50,19 @@ export function PushRegistrar() {
       cancelado = true;
     };
   }, [carregando, usuarioId]);
+
+  // Tocar num push com `data.href` abre a tela correspondente (só logado).
+  const router = useRouter();
+  const ultimaNotificacaoRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (carregando || !usuarioId) return;
+    return ouvirToqueEmNotificacao((href, notificacaoId) => {
+      // evita reabrir a mesma notificação (a que abriu o app é reentregue)
+      if (ultimaNotificacaoRef.current === notificacaoId) return;
+      ultimaNotificacaoRef.current = notificacaoId;
+      router.push(href as Href);
+    });
+  }, [carregando, usuarioId, router]);
 
   return null;
 }

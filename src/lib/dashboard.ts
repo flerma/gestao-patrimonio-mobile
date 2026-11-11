@@ -5,6 +5,7 @@ import type {
   UUID,
 } from "@/lib/types";
 import { formatCurrency } from "@/lib/format";
+import { indiceReajusteLabels } from "@/lib/labels";
 
 export interface DashboardResumo {
   totalPatrimonio: number;
@@ -226,6 +227,50 @@ function monthsBetween(start: Date, end: Date): number {
   );
 }
 
+/** Soma meses a uma data, limitando o dia ao último dia do mês de destino (31/01 + 1 → 28/02). */
+function adicionarMeses(data: Date, meses: number): Date {
+  const alvo = new Date(data.getFullYear(), data.getMonth() + meses, 1);
+  const ultimoDia = new Date(alvo.getFullYear(), alvo.getMonth() + 1, 0).getDate();
+  alvo.setDate(Math.min(data.getDate(), ultimoDia));
+  return alvo;
+}
+
+export interface ReajusteContrato {
+  /** Data em que o contrato completa `meses` meses de vigência. */
+  data: Date;
+  /** Múltiplo de `periodoReajuste` (12, 24, 36…). */
+  meses: number;
+  /** true quando `data` cai no mês corrente — é o mês do reajuste. */
+  noMesAtual: boolean;
+}
+
+/**
+ * Reajuste do aluguel a cada `periodoReajuste` meses contados de `dataInicio`.
+ * Retorna o reajuste do mês corrente (se este é o mês em que o contrato completa
+ * 12, 24, 36… meses) ou, senão, o próximo. `null` quando o contrato não reajusta
+ * (sem início, sem período, SEM_REAJUSTE) ou quando o próximo reajuste cai depois
+ * do fim do contrato.
+ */
+export function calcularReajuste(
+  contrato: ContratoResponse,
+  hoje = new Date(),
+): ReajusteContrato | null {
+  const inicio = parseDate(contrato.dataInicio);
+  const periodo = contrato.periodoReajuste ?? 0;
+  if (!inicio || periodo <= 0 || contrato.indiceReajuste === "SEM_REAJUSTE") {
+    return null;
+  }
+  const decorridos = monthsBetween(inicio, hoje);
+  const noMesAtual = decorridos > 0 && decorridos % periodo === 0;
+  const meses = noMesAtual
+    ? decorridos
+    : (Math.floor(Math.max(decorridos, 0) / periodo) + 1) * periodo;
+  const data = adicionarMeses(inicio, meses);
+  const fim = parseDate(contrato.dataFim);
+  if (fim && data > fim) return null;
+  return { data, meses, noMesAtual };
+}
+
 /** Filtra imóveis/contratos pertencentes a um usuário (ou todos se usuarioId indefinido). */
 export function filtrarPorUsuario(
   imoveis: ImovelResponse[],
@@ -363,25 +408,27 @@ export function gerarAlertas(
       }
     }
 
-    const inicio = parseDate(contrato.dataInicio);
-    if (
-      inicio &&
-      contrato.periodoReajuste &&
-      contrato.indiceReajuste &&
-      contrato.indiceReajuste !== "SEM_REAJUSTE"
-    ) {
-      const proximoReajuste = new Date(inicio);
-      while (proximoReajuste <= hoje) {
-        proximoReajuste.setMonth(
-          proximoReajuste.getMonth() + contrato.periodoReajuste,
-        );
-      }
-      if (proximoReajuste <= em30Dias) {
+    const reajuste = calcularReajuste(contrato, hoje);
+    if (reajuste) {
+      const indice = contrato.indiceReajuste
+        ? ` pelo índice ${indiceReajusteLabels[contrato.indiceReajuste]}`
+        : "";
+      const data = reajuste.data.toLocaleDateString("pt-BR");
+      if (reajuste.noMesAtual) {
+        alertas.push({
+          id: `reajuste-${contrato.id}`,
+          severidade: "warning",
+          titulo: `Reajuste do aluguel — ${nomeImovel}`,
+          descricao: `O contrato completa ${reajuste.meses} meses de vigência em ${data}. Aplique o reajuste${indice}.`,
+          href: `/contratos/${contrato.id}`,
+        });
+      } else if (reajuste.data <= em30Dias) {
         alertas.push({
           id: `reajuste-${contrato.id}`,
           severidade: "info",
           titulo: `Reajuste previsto — ${nomeImovel}`,
-          descricao: `Reajuste (${contrato.indiceReajuste}) em ${proximoReajuste.toLocaleDateString("pt-BR")}.`,
+          descricao: `O contrato completará ${reajuste.meses} meses de vigência em ${data}. Reajuste${indice}.`,
+          href: `/contratos/${contrato.id}`,
         });
       }
     }
